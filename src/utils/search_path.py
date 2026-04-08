@@ -15,7 +15,7 @@ Usage (library):
 
 Usage (CLI — run from repo root):
     python3 src/utils/search_path.py 402365 401129
-    python3 src/utils/search_path.py 402365 401129 --graph data/graph.npz
+    python3 src/utils/search_path.py 402365 401129 --graph data/road_graph.npz
 """
 
 import argparse
@@ -109,7 +109,7 @@ def main():
     ap = argparse.ArgumentParser(description="Dijkstra shortest path between two sensors")
     ap.add_argument("start", help="Start sensor ID ")
     ap.add_argument("end",   help="End sensor ID ")
-    ap.add_argument("--graph", default="data/graph.npz", help="Path to graph.npz (default: data/graph.npz)")
+    ap.add_argument("--graph", default="data/road_graph.npz", help="Path to graph npz (default: data/road_graph.npz)")
     args = ap.parse_args()
 
     graph_path = Path(args.graph)

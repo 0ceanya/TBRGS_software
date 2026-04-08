@@ -1,7 +1,4 @@
 {
-  "version": "1.0",
-  "description": "TBRGS route search test case \u2014 real PEMS-BAY data, rush hour 18:00-18:55",
-  "type": "route_search",
   "sensor_id_start": "402365",
   "sensor_id_end": "401129",
   "window": {
