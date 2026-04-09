@@ -97,3 +97,62 @@ class TestRoutesAPI:
         data = response.json()
         assert data["error"] is not None
         assert data["routes"] == []
+
+    def test_find_routes_k_out_of_range_422(self, client):
+        """k above max returns validation error."""
+        response = client.post(
+            "/api/routes/find",
+            json={
+                "origin": "402365",
+                "destination": "401129",
+                "model": "mock",
+                "algorithm": "AS",
+                "k": 10,
+            },
+        )
+        assert response.status_code == 422
+
+    def test_test_cases_list(self, client):
+        """GET /api/test-cases lists JSON fixtures with endpoints."""
+        response = client.get("/api/test-cases")
+        assert response.status_code == 200
+        data = response.json()
+        assert "test_cases" in data
+        assert data["count"] >= 1
+        first = data["test_cases"][0]
+        assert first["id"].startswith("tc_")
+        assert first["default_origin"]
+        assert first["default_destination"]
+
+    def test_scenarios_list(self, client):
+        """GET /api/scenarios returns preset traffic scenarios."""
+        response = client.get("/api/scenarios")
+        assert response.status_code == 200
+        data = response.json()
+        assert "scenarios" in data
+        assert data["count"] >= 1
+        first = data["scenarios"][0]
+        assert "id" in first
+        assert "label" in first
+
+    def test_find_routes_includes_horizon_milestones(self, client):
+        """Multi-step forecast returns horizon_milestones in response."""
+        response = client.post(
+            "/api/routes/find",
+            json={
+                "origin": "402365",
+                "destination": "401129",
+                "model": "mock",
+                "algorithm": "AS",
+                "k": 2,
+                "milestone_steps": [1, 3],
+            },
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert data.get("error") is None
+        assert "horizon_milestones" in data
+        assert len(data["horizon_milestones"]) == 2
+        assert data["horizon_milestones"][0]["step"] == 1
+        assert data["horizon_milestones"][1]["step"] == 3
+        assert len(data["horizon_milestones"][0]["routes"]) >= 1

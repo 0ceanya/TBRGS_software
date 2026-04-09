@@ -80,7 +80,15 @@ body {
     width: 100%;
 }
 
-.page-header { margin-bottom: 2rem; }
+/* Keep title block above Leaflet panes (high internal z-index) when scrolling */
+.page-header {
+    position: relative;
+    z-index: 2;
+    margin-bottom: 2rem;
+    background: var(--bg);
+    padding-bottom: 0.25rem;
+}
+
 .page-header h1 {
     font-size: 1.75rem;
     font-weight: 700;
@@ -89,18 +97,15 @@ body {
 }
 .subtitle { color: var(--text-secondary); font-size: 0.9375rem; }
 
-/* Layout */
+/* Layout: isolate so Leaflet layers cannot stack above .page-header while scrolling */
 .layout-split {
     display: grid;
     grid-template-columns: 320px 1fr;
     gap: 1.5rem;
     align-items: start;
-}
-
-.testing-layout {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1.5rem;
+    position: relative;
+    z-index: 0;
+    isolation: isolate;
 }
 
 /* Panels */
@@ -245,6 +250,54 @@ body {
 .btn-primary:hover { background: var(--accent-hover); }
 .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
 
+.btn-ghost {
+    background: transparent;
+    color: var(--accent);
+    border: 1px solid var(--border);
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    border-radius: var(--radius);
+    font-size: 0.8125rem;
+    font-family: var(--font);
+}
+.btn-ghost:hover { background: rgba(37, 99, 235, 0.06); }
+
+.field-advanced { margin-bottom: 0.75rem; }
+.collapsible-body { margin-top: 0.5rem; }
+.collapsible-body[hidden] { display: none !important; }
+
+.input-search { margin-bottom: 0.35rem; }
+
+select.input[size] {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+}
+
+.milestone-fieldset {
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 0.75rem 1rem;
+}
+
+.forecast-intro {
+    margin-bottom: 0.75rem;
+    padding: 0.5rem 0.75rem;
+    background: rgba(5, 150, 105, 0.08);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+}
+
+.forecast-section { margin-top: 1rem; }
+.forecast-block { margin-bottom: 1.25rem; }
+.forecast-block-title {
+    font-size: 0.875rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: var(--text);
+}
+
 /* Status */
 .status {
     font-size: 0.8125rem;
@@ -352,22 +405,6 @@ body {
     white-space: pre-wrap;
 }
 
-.testing-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1.25rem;
-}
-.testing-header .panel-title { margin-bottom: 0; }
-.testing-header .btn { width: auto; }
-
-.placeholder-text {
-    color: var(--text-secondary);
-    font-style: italic;
-    text-align: center;
-    padding: 3rem 1rem;
-}
-
 /* Footer */
 .footer {
     text-align: center;
@@ -381,5 +418,4 @@ body {
 /* Responsive */
 @media (max-width: 900px) {
     .layout-split { grid-template-columns: 1fr; }
-    .testing-layout { grid-template-columns: 1fr; }
 }

@@ -4,6 +4,27 @@ from src.routing.route_finder import find_routes
 
 
 class TestRouteFinder:
+    """End-to-end route finding with mock provider."""
+
+    def test_horizon_milestones_multiple_steps(self):
+        """Multiple milestone steps each produce a route list."""
+        outcome = find_routes(
+            npz_path="data/graph.npz",
+            origin_sensor="402365",
+            dest_sensor="401129",
+            model_name="mock",
+            algorithm="AS",
+            k=2,
+            milestone_steps=[1, 3],
+        )
+        assert len(outcome.horizon_milestones) == 2
+        assert outcome.horizon_milestones[0].step == 1
+        assert outcome.horizon_milestones[1].step == 3
+        assert len(outcome.routes) >= 1
+        assert outcome.routes == outcome.horizon_milestones[0].routes
+
+
+class TestRouteFinderBasics:
     """TC-09: End-to-end route finding with mock provider."""
 
     def test_find_routes_mock(self):
@@ -29,6 +50,7 @@ class TestRouteFinder:
         assert best.model == "mock"
         assert outcome.origin["source"] == "sensor"
         assert outcome.destination["source"] == "sensor"
+        assert len(outcome.horizon_milestones) == 1
 
     def test_find_routes_sorted(self):
         """Routes should be sorted by ascending travel time."""

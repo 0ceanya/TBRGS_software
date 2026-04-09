@@ -3,7 +3,6 @@
 Serves static files, HTML templates, and JSON API endpoints.
 """
 
-import subprocess
 from contextlib import asynccontextmanager
 from pathlib import Path
 
@@ -14,8 +13,9 @@ from fastapi.templating import Jinja2Templates
 
 from src.api.graph_api import router as graph_router
 from src.api.middleware import global_exception_handler
-from src.api.models_page import router as models_router
 from src.api.routes_page import router as routes_router
+from src.api.scenarios import router as scenarios_router
+from src.api.test_cases_catalog import router as test_cases_router
 from src.config import settings as default_settings
 from src.core.graph_adapter import load_npz
 from src.data.pems_client import PEMSClient
@@ -67,7 +67,8 @@ def create_app(app_settings=None) -> FastAPI:
 
     app.include_router(graph_router)
     app.include_router(routes_router)
-    app.include_router(models_router)
+    app.include_router(scenarios_router)
+    app.include_router(test_cases_router)
 
     # OSRM proxy -- avoids browser CORS issues with the public OSRM API
     @app.get("/api/osrm")
@@ -82,40 +83,37 @@ def create_app(app_settings=None) -> FastAPI:
             resp = await client.get(url)
             return resp.json()
 
-    # Testing API endpoint
-    @app.get("/api/testing/run")
-    async def run_tests() -> dict:
-        """Run pytest and return results."""
-        result = subprocess.run(
-            ["python", "-m", "pytest", "tests/", "-v", "--tb=short", "-q"],
-            capture_output=True,
-            text=True,
-            timeout=120,
+    @app.get("/api/geocode/reverse")
+    async def reverse_geocode(lat: float, lon: float) -> dict:
+        """Proxy Nominatim reverse lookup (polite User-Agent; short timeout)."""
+        if not (-90.0 <= lat <= 90.0 and -180.0 <= lon <= 180.0):
+            return {"error": "coordinates out of range", "display_name": ""}
+        url = (
+            "https://nominatim.openstreetmap.org/reverse"
+            f"?format=json&lat={lat}&lon={lon}&zoom=18&addressdetails=1"
         )
-        output = result.stdout + result.stderr
-
-        # Parse test results from verbose output
-        test_results = []
-        for line in output.splitlines():
-            if "PASSED" in line or "FAILED" in line:
-                parts = line.strip().split(" ")
-                name = parts[0].split("::")[-1] if "::" in parts[0] else parts[0]
-                status = "passed" if "PASSED" in line else "failed"
-                test_results.append({"name": name, "status": status, "duration": ""})
-
-        return {"output": output, "results": test_results, "returncode": result.returncode}
+        headers = {
+            "User-Agent": "TBRGS/1.0 (traffic demo; contact: local)",
+            "Accept-Language": "en",
+        }
+        async with httpx.AsyncClient(timeout=8) as client:
+            resp = await client.get(url, headers=headers)
+            if resp.status_code != 200:
+                return {"display_name": "", "error": f"upstream {resp.status_code}"}
+            data = resp.json()
+        name = data.get("display_name") or ""
+        addr = data.get("address") or {}
+        short = addr.get("road") or addr.get("neighbourhood") or addr.get("suburb")
+        if short and addr.get("city"):
+            short = f"{short}, {addr['city']}"
+        return {
+            "display_name": name,
+            "short_label": short or name or f"{lat:.4f}, {lon:.4f}",
+        }
 
     # Page routes
     @app.get("/")
     async def route_finding_page(request: Request):
         return templates.TemplateResponse(request=request, name="routes.html")
-
-    @app.get("/models")
-    async def model_comparison_page(request: Request):
-        return templates.TemplateResponse(request=request, name="models.html")
-
-    @app.get("/testing")
-    async def testing_page(request: Request):
-        return templates.TemplateResponse(request=request, name="testing.html")
 
     return app

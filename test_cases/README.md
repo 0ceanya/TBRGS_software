@@ -2,6 +2,8 @@
 
 Comprehensive test suite for validating deep LSTM traffic flow prediction models across diverse real-world scenarios. Each test case is drawn from the PEMS-BAY dataset with careful selection to capture distinct network characteristics.
 
+**Web app:** the route page does not load the full `window` time series from disk, but you can pick each **`tc_*.json` example** from the **PEMS fixture** dropdown: `GET /api/test-cases` scans these files and returns `sensor_id_start`, `sensor_id_end`, and a suggested clock time from the README matrix. Separate **demo presets** are at `GET /api/scenarios`. Offline training/eval still uses the complete JSON.
+
 ## Dataset Background
 
 **Source**: PEMS-BAY (California Bay Area traffic, Jan-Jun 2017)

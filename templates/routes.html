@@ -5,34 +5,68 @@
 {% block content %}
 <div class="page-header">
     <h1>Route Finding</h1>
-    <p class="subtitle">Pick sensors from the list or drag the green (start) and red (end) pins on the map. Map positions snap to the nearest sensor when finding routes.</p>
+    <p class="subtitle">Drag the green (A) and red (B) pins to set start and end (snapped to the nearest sensor when you run a search). Choose a PEMS <code>test_cases</code> JSON example or a demo scenario below; use &ldquo;Sensor IDs (advanced)&rdquo; for manual IDs.</p>
 </div>
 
 <div class="layout-split">
     <aside class="panel controls-panel">
         <h2 class="panel-title">Parameters</h2>
 
-        <div class="field">
-            <label for="origin">Origin Sensor</label>
-            <select id="origin" class="input"></select>
-            <p class="field-hint">Changing this moves the green start pin. Drag the pin on the map to use a custom spot instead.</p>
-        </div>
-
-        <div class="field">
-            <label for="destination">Destination Sensor</label>
-            <select id="destination" class="input"></select>
-            <p class="field-hint">Changing this moves the red end pin. Drag the pin to set the destination visually.</p>
+        <div class="field field-advanced collapsible" id="sensor-advanced">
+            <button type="button" class="btn btn-ghost btn-collapse" id="sensor-advanced-toggle" aria-expanded="false">
+                Sensor IDs (advanced)
+            </button>
+            <div class="collapsible-body" id="sensor-advanced-body" hidden>
+                <label for="origin">Origin sensor ID</label>
+                <input type="text" id="origin-search" class="input input-search" placeholder="Type to filter..." autocomplete="off" />
+                <select id="origin" class="input" size="6"></select>
+                <p class="field-hint">Picking here moves the green pin and switches start to menu mode.</p>
+                <label for="destination">Destination sensor ID</label>
+                <input type="text" id="destination-search" class="input input-search" placeholder="Type to filter..." autocomplete="off" />
+                <select id="destination" class="input" size="6"></select>
+                <p class="field-hint">Picking here moves the red pin and switches end to menu mode.</p>
+            </div>
         </div>
 
         <div class="field map-mode-hint" id="map-mode-hint" aria-live="polite"></div>
 
         <div class="field">
+            <label for="test-case-pems">PEMS fixture (<code>test_cases/*.json</code>)</label>
+            <select id="test-case-pems" class="input">
+                <option value="">— None —</option>
+            </select>
+            <p class="field-hint">Loads route endpoints and a suggested time from each JSON file (the large <code>window</code> series is not used by the live API).</p>
+        </div>
+
+        <div class="field">
+            <label for="scenario">Demo scenario (quick presets)</label>
+            <select id="scenario" class="input"></select>
+            <p class="field-hint">Lightweight time-of-day presets; adjust pins or pick a PEMS case above for real file-based examples.</p>
+        </div>
+
+        <div class="field">
+            <label for="departure-time">Departure time (label only)</label>
+            <input type="time" id="departure-time" class="input" value="08:55" />
+            <p class="field-hint">Shown in results for context; forecasts use 5-minute steps up to ~60 minutes.</p>
+        </div>
+
+        <fieldset class="field milestone-fieldset">
+            <legend class="label-secondary">Forecast milestones (+5 minutes per step)</legend>
+            <div class="checkbox-group milestone-checks">
+                <label><input type="checkbox" name="ms" value="1" checked> +5 min (step 1)</label>
+                <label><input type="checkbox" name="ms" value="3" checked> +15 min</label>
+                <label><input type="checkbox" name="ms" value="6" checked> +30 min</label>
+                <label><input type="checkbox" name="ms" value="12"> +60 min</label>
+            </div>
+        </fieldset>
+
+        <div class="field">
             <label for="model">Prediction Model</label>
             <select id="model" class="input">
-                <option value="mock" selected>Mock (default)</option>
+                <option value="lstm" selected>LSTM (default)</option>
+                <option value="mock">Mock</option>
                 <option value="gru">GRU</option>
                 <option value="dcrnn">DCRNN</option>
-                <option value="lstm">LSTM</option>
             </select>
         </div>
 
@@ -42,9 +76,10 @@
         </div>
 
         <div class="field">
-            <label for="k">Number of Routes</label>
-            <input type="range" id="k" min="1" max="10" value="5" class="slider">
-            <span id="k-display" class="slider-value">5</span>
+            <label for="k">Alternative routes</label>
+            <input type="range" id="k" min="1" max="3" value="2" class="slider">
+            <span id="k-display" class="slider-value">2</span>
+            <p class="field-hint">Best route plus up to two backup paths (Yen k-shortest), not duplicate &ldquo;optimal&rdquo; lines.</p>
         </div>
 
         <button id="find-btn" class="btn btn-primary">Find Routes</button>
@@ -53,6 +88,7 @@
 
     <section class="panel results-panel">
         <div id="map" class="map-container"></div>
+        <div id="forecast-intro" class="forecast-intro field-hint" hidden></div>
         <div id="results-table-container" class="results-container">
             <table id="results-table" class="table">
                 <thead>
@@ -65,6 +101,11 @@
                 </thead>
                 <tbody id="results-body"></tbody>
             </table>
+        </div>
+        <div id="forecast-section" class="results-container forecast-section" hidden>
+            <h3 class="panel-title">Forecast by time horizon</h3>
+            <p id="forecast-note" class="field-hint"></p>
+            <div id="forecast-tables"></div>
         </div>
     </section>
 </div>
