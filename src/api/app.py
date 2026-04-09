@@ -3,26 +3,62 @@
 Serves static files, HTML templates, and JSON API endpoints.
 """
 
+import subprocess
+from contextlib import asynccontextmanager
 from pathlib import Path
 
-from fastapi import FastAPI
+import httpx
+from fastapi import FastAPI, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
 from src.api.graph_api import router as graph_router
-from src.api.routes_page import router as routes_router
+from src.api.middleware import global_exception_handler
 from src.api.models_page import router as models_router
+from src.api.routes_page import router as routes_router
+from src.config import settings as default_settings
+from src.core.graph_adapter import load_npz
+from src.data.pems_client import PEMSClient
+from src.prediction.dcrnn_provider import DCRNNProvider
+from src.prediction.gru_provider import GRUProvider
+from src.prediction.lstm_provider import LSTMProvider
+from src.prediction.mock_provider import MockProvider
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 TEMPLATES_DIR = BASE_DIR / "templates"
 STATIC_DIR = BASE_DIR / "static"
 
 
-def create_app() -> FastAPI:
+def create_app(app_settings=None) -> FastAPI:
+    if app_settings is None:
+        app_settings = default_settings
+
+    @asynccontextmanager
+    async def lifespan(app: FastAPI):
+        """Load shared resources once at startup and release on shutdown."""
+        app.state.npz_data = load_npz(app_settings.GRAPH_NPZ_PATH)
+        app.state.pems_client = PEMSClient(
+            api_key=app_settings.PEMS_API_KEY,
+            base_url=app_settings.PEMS_BASE_URL,
+            npz_path=app_settings.GRAPH_NPZ_PATH,
+        )
+        app.state.providers = {
+            "mock": MockProvider(),
+            "gru": GRUProvider(pems_client=app.state.pems_client),
+            "lstm": LSTMProvider(pems_client=app.state.pems_client),
+            "dcrnn": DCRNNProvider(pems_client=app.state.pems_client),
+        }
+        yield
+
     app = FastAPI(
         title="TBRGS",
         description="Traffic-Based Route Guidance System",
+        lifespan=lifespan,
     )
+
+    app.state.settings = app_settings
+
+    app.add_exception_handler(Exception, global_exception_handler)
 
     app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 
@@ -34,8 +70,6 @@ def create_app() -> FastAPI:
     app.include_router(models_router)
 
     # OSRM proxy -- avoids browser CORS issues with the public OSRM API
-    import httpx
-
     @app.get("/api/osrm")
     async def osrm_proxy(coords: str) -> dict:
         """Proxy OSRM route requests to get road-following geometries.
@@ -52,7 +86,6 @@ def create_app() -> FastAPI:
     @app.get("/api/testing/run")
     async def run_tests() -> dict:
         """Run pytest and return results."""
-        import subprocess
         result = subprocess.run(
             ["python", "-m", "pytest", "tests/", "-v", "--tb=short", "-q"],
             capture_output=True,
@@ -73,8 +106,6 @@ def create_app() -> FastAPI:
         return {"output": output, "results": test_results, "returncode": result.returncode}
 
     # Page routes
-    from fastapi import Request
-
     @app.get("/")
     async def route_finding_page(request: Request):
         return templates.TemplateResponse(request=request, name="routes.html")

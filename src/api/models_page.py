@@ -4,9 +4,12 @@ from __future__ import annotations
 
 from typing import List, Optional
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 from pydantic import BaseModel, Field, model_validator
 
+from src.api.dependencies import get_npz_data, get_pems_client, get_providers
+from src.api.validation import validate_endpoints
+from src.data.pems_client import PEMSClient
 from src.routing.route_finder import find_routes
 
 router = APIRouter(prefix="/api/models", tags=["models"])
@@ -24,49 +27,36 @@ class CompareRequest(BaseModel):
     k: int = Field(default=5, ge=1, le=10)
 
     @model_validator(mode="after")
-    def validate_endpoints(self) -> "CompareRequest":
-        has_o_sensor = bool(self.origin and self.origin.strip())
-        has_o_coords = self.origin_lat is not None and self.origin_lon is not None
-        if self.origin_lat is not None or self.origin_lon is not None:
-            if not has_o_coords:
-                raise ValueError("origin_lat and origin_lon must be supplied together")
-        if not has_o_sensor and not has_o_coords:
-            raise ValueError(
-                "Origin required: select a sensor or provide origin_lat and origin_lon"
-            )
-
-        has_d_sensor = bool(self.destination and self.destination.strip())
-        has_d_coords = self.dest_lat is not None and self.dest_lon is not None
-        if self.dest_lat is not None or self.dest_lon is not None:
-            if not has_d_coords:
-                raise ValueError("dest_lat and dest_lon must be supplied together")
-        if not has_d_sensor and not has_d_coords:
-            raise ValueError(
-                "Destination required: select a sensor or provide dest_lat and dest_lon"
-            )
+    def _check_endpoints(self) -> "CompareRequest":
+        validate_endpoints(
+            self.origin,
+            self.origin_lat,
+            self.origin_lon,
+            self.destination,
+            self.dest_lat,
+            self.dest_lon,
+        )
         return self
 
 
 @router.get("/available")
-async def available_models() -> dict:
+async def available_models(providers: dict = Depends(get_providers)) -> dict:
     """Return which models are usable."""
-    from src.prediction.mock_provider import MockProvider
-    from src.prediction.gru_provider import GRUProvider
-    from src.prediction.dcrnn_provider import DCRNNProvider
-    from src.prediction.lstm_provider import LSTMProvider
-
     return {
         "models": [
-            {"name": "mock", "available": MockProvider().is_available()},
-            {"name": "gru", "available": GRUProvider().is_available()},
-            {"name": "dcrnn", "available": DCRNNProvider().is_available()},
-            {"name": "lstm", "available": LSTMProvider().is_available()},
+            {"name": name, "available": p.is_available()}
+            for name, p in providers.items()
         ]
     }
 
 
 @router.post("/compare")
-async def compare(req: CompareRequest) -> dict:
+async def compare(
+    req: CompareRequest,
+    npz: dict = Depends(get_npz_data),
+    pems: PEMSClient = Depends(get_pems_client),
+    providers: dict = Depends(get_providers),
+) -> dict:
     """Run the same route query with multiple models and compare results."""
     comparisons: dict = {}
     endpoints_meta: dict | None = None
@@ -74,6 +64,7 @@ async def compare(req: CompareRequest) -> dict:
     for model_name in req.models:
         try:
             outcome = find_routes(
+                npz_data=npz,
                 origin_sensor=req.origin,
                 dest_sensor=req.destination,
                 origin_lat=req.origin_lat,
@@ -83,6 +74,8 @@ async def compare(req: CompareRequest) -> dict:
                 model_name=model_name,
                 algorithm=req.algorithm,
                 k=req.k,
+                pems_client=pems,
+                providers=providers,
             )
             if endpoints_meta is None:
                 endpoints_meta = {

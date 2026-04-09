@@ -58,9 +58,55 @@ def mock_provider():
 
 @pytest.fixture
 def client():
-    """FastAPI test client."""
+    """FastAPI test client with lifespan events."""
     from fastapi.testclient import TestClient
     from src.api.app import create_app
 
     app = create_app()
-    return TestClient(app)
+    with TestClient(app) as c:
+        yield c
+
+
+@pytest.fixture
+def mock_pems_client():
+    """Unconfigured PEMS client (no API key)."""
+    from src.data.pems_client import PEMSClient
+
+    return PEMSClient(api_key=None)
+
+
+@pytest.fixture
+def configured_pems_client():
+    """Mock PEMS client that appears configured but returns synthetic data."""
+    from unittest.mock import MagicMock
+    import numpy as np
+
+    client = MagicMock()
+    client.is_configured.return_value = True
+
+    def fake_fetch(sensor_ids, steps=12):
+        rng = np.random.default_rng(42)
+        return {
+            sid: np.column_stack([
+                rng.uniform(200, 1500, steps),
+                rng.uniform(20, 85, steps),
+                np.linspace(0.3, 0.5, steps),
+            ]).astype(np.float32)
+            for sid in sensor_ids
+        }
+
+    client.fetch_recent_readings.side_effect = fake_fetch
+    return client
+
+
+@pytest.fixture
+def live_pems_client():
+    """Real PEMS client -- skips if PEMS_API_KEY not set in environment."""
+    import os
+
+    key = os.environ.get("PEMS_API_KEY")
+    if not key:
+        pytest.skip("PEMS_API_KEY not set -- skipping live PEMS test")
+    from src.data.pems_client import PEMSClient
+
+    return PEMSClient(api_key=key)

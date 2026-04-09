@@ -17,8 +17,11 @@ import argparse
 import uvicorn
 
 from src.api.app import create_app
+# Import settings to validate configuration at startup (fail-fast on bad env vars).
+# settings will be passed to create_app() once Task 3 updates the app factory.
+from src.config import settings
 
-app = create_app()
+app = create_app(settings)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="TBRGS Web Application")

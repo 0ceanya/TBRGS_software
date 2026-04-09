@@ -4,9 +4,12 @@ from __future__ import annotations
 
 from typing import Optional
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends, Request
 from pydantic import BaseModel, Field, model_validator
 
+from src.api.dependencies import get_npz_data, get_pems_client, get_providers
+from src.api.validation import validate_endpoints
+from src.data.pems_client import PEMSClient
 from src.routing.route_finder import find_routes
 
 router = APIRouter(prefix="/api/routes", tags=["routes"])
@@ -24,34 +27,29 @@ class RouteRequest(BaseModel):
     k: int = Field(default=5, ge=1, le=10)
 
     @model_validator(mode="after")
-    def validate_endpoints(self) -> "RouteRequest":
-        has_o_sensor = bool(self.origin and self.origin.strip())
-        has_o_coords = self.origin_lat is not None and self.origin_lon is not None
-        if self.origin_lat is not None or self.origin_lon is not None:
-            if not has_o_coords:
-                raise ValueError("origin_lat and origin_lon must be supplied together")
-        if not has_o_sensor and not has_o_coords:
-            raise ValueError(
-                "Origin required: select a sensor or provide origin_lat and origin_lon"
-            )
-
-        has_d_sensor = bool(self.destination and self.destination.strip())
-        has_d_coords = self.dest_lat is not None and self.dest_lon is not None
-        if self.dest_lat is not None or self.dest_lon is not None:
-            if not has_d_coords:
-                raise ValueError("dest_lat and dest_lon must be supplied together")
-        if not has_d_sensor and not has_d_coords:
-            raise ValueError(
-                "Destination required: select a sensor or provide dest_lat and dest_lon"
-            )
+    def _check_endpoints(self) -> "RouteRequest":
+        validate_endpoints(
+            self.origin,
+            self.origin_lat,
+            self.origin_lon,
+            self.destination,
+            self.dest_lat,
+            self.dest_lon,
+        )
         return self
 
 
 @router.post("/find")
-async def find(req: RouteRequest) -> dict:
+async def find(
+    req: RouteRequest,
+    npz: dict = Depends(get_npz_data),
+    pems: PEMSClient = Depends(get_pems_client),
+    providers: dict = Depends(get_providers),
+) -> dict:
     """Find top-k routes between origin and destination."""
     try:
         outcome = find_routes(
+            npz_data=npz,
             origin_sensor=req.origin,
             dest_sensor=req.destination,
             origin_lat=req.origin_lat,
@@ -61,6 +59,8 @@ async def find(req: RouteRequest) -> dict:
             model_name=req.model,
             algorithm=req.algorithm,
             k=req.k,
+            pems_client=pems,
+            providers=providers,
         )
     except NotImplementedError as e:
         return {"error": str(e), "routes": [], "endpoints": None}

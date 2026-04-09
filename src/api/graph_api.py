@@ -2,27 +2,17 @@
 
 from __future__ import annotations
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends, Request
 
-from src.core.graph_adapter import load_npz
 from src.algorithms.registry import get_available
+from src.api.dependencies import get_npz_data
 
 router = APIRouter(prefix="/api/graph", tags=["graph"])
 
-_npz_cache: dict | None = None
-
-
-def _get_npz() -> dict:
-    global _npz_cache
-    if _npz_cache is None:
-        _npz_cache = load_npz("data/graph.npz")
-    return _npz_cache
-
 
 @router.get("/sensors")
-async def list_sensors() -> dict:
+async def list_sensors(npz: dict = Depends(get_npz_data)) -> dict:
     """Return all sensor IDs with lat/lon coordinates."""
-    npz = _get_npz()
     sensors = [
         {"id": str(sid), "lat": float(lat), "lon": float(lon)}
         for sid, lat, lon in zip(npz["sensor_ids"], npz["lats"], npz["lons"])
@@ -31,9 +21,8 @@ async def list_sensors() -> dict:
 
 
 @router.get("/info")
-async def graph_info() -> dict:
+async def graph_info(npz: dict = Depends(get_npz_data)) -> dict:
     """Return graph summary metadata."""
-    npz = _get_npz()
     return {
         "n_sensors": int(npz["n_nodes"]),
         "n_edges": npz["adj"].nnz,

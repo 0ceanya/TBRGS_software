@@ -1,17 +1,12 @@
 """Tests for FastAPI endpoints (TC-10, TC-11)."""
 
 import pytest
-from fastapi.testclient import TestClient
-
-from src.api.app import create_app
-
-client = TestClient(create_app())
 
 
 class TestGraphAPI:
     """TC-10: Graph sensor endpoints."""
 
-    def test_sensors_returns_325(self):
+    def test_sensors_returns_325(self, client):
         """TC-10: GET /api/graph/sensors returns all 325 sensors."""
         response = client.get("/api/graph/sensors")
         assert response.status_code == 200
@@ -25,7 +20,7 @@ class TestGraphAPI:
         assert "lat" in sensor
         assert "lon" in sensor
 
-    def test_algorithms_list(self):
+    def test_algorithms_list(self, client):
         """Available algorithms endpoint returns expected set."""
         response = client.get("/api/graph/algorithms")
         assert response.status_code == 200
@@ -38,7 +33,7 @@ class TestGraphAPI:
 class TestRoutesAPI:
     """TC-11: Route finding endpoint."""
 
-    def test_find_routes_returns_results(self):
+    def test_find_routes_returns_results(self, client):
         """TC-11: POST /api/routes/find returns valid routes."""
         response = client.post(
             "/api/routes/find",
@@ -62,7 +57,7 @@ class TestRoutesAPI:
         assert data["endpoints"]["origin"]["source"] == "sensor"
         assert data["endpoints"]["destination"]["source"] == "sensor"
 
-    def test_find_routes_custom_coordinates(self):
+    def test_find_routes_custom_coordinates(self, client):
         """POST with lat/lon snaps to sensors and returns endpoints metadata."""
         response = client.post(
             "/api/routes/find",
@@ -86,7 +81,7 @@ class TestRoutesAPI:
         assert data["endpoints"]["destination"]["source"] == "coordinates"
         assert data["routes"][0]["path"][0] == data["endpoints"]["origin"]["sensor_id"]
 
-    def test_invalid_sensor_returns_error(self):
+    def test_invalid_sensor_returns_error(self, client):
         """Invalid sensor ID returns error in response."""
         response = client.post(
             "/api/routes/find",
