@@ -1,91 +1,1190 @@
 {
-  "test_case_id": "tc_003",
-  "description": "Medium distance route (~10km) using A*",
-  "category": "route_finding",
-  "input": {
-    "origin": "400343",
-    "destination": "400274",
-    "model": "mock",
-    "algorithm": "AS",
-    "k": 5
-  },
-  "expected_output": {
-    "num_routes": 5,
-    "routes": [
+  "sensor_id_start": "400304",
+  "sensor_id_end": "400013",
+  "scenario": "Network-wide Congestion - Multiple Bottlenecks",
+  "window": {
+    "400036": [
       {
-        "path": [
-          "400343",
-          "401560",
-          "401440",
-          "400172",
-          "400895",
-          "402369",
-          "400687",
-          "400274"
-        ],
-        "travel_time_seconds": 1039.8,
-        "distance_km": 13.28,
-        "num_sensors": 8
+        "step": 1,
+        "time_of_day": 0.58,
+        "speed": 71.6,
+        "flow": 810.4
       },
       {
-        "path": [
-          "400343",
-          "401560",
-          "401440",
-          "400172",
-          "400069",
-          "402369",
-          "400687",
-          "400274"
-        ],
-        "travel_time_seconds": 1040.1,
-        "distance_km": 13.28,
-        "num_sensors": 8
+        "step": 2,
+        "time_of_day": 0.58347,
+        "speed": 70.2,
+        "flow": 853.2
       },
       {
-        "path": [
-          "400343",
-          "401560",
-          "400030",
-          "400172",
-          "400895",
-          "402369",
-          "400687",
-          "400274"
-        ],
-        "travel_time_seconds": 1040.6,
-        "distance_km": 13.4,
-        "num_sensors": 8
+        "step": 3,
+        "time_of_day": 0.58694,
+        "speed": 70.1,
+        "flow": 883.6
       },
       {
-        "path": [
-          "400343",
-          "401560",
-          "400030",
-          "400172",
-          "400069",
-          "402369",
-          "400687",
-          "400274"
-        ],
-        "travel_time_seconds": 1040.9,
-        "distance_km": 13.4,
-        "num_sensors": 8
+        "step": 4,
+        "time_of_day": 0.59042,
+        "speed": 69.9,
+        "flow": 890.6
       },
       {
-        "path": [
-          "400343",
-          "401560",
-          "401440",
-          "400172",
-          "400794",
-          "402369",
-          "400687",
-          "400274"
-        ],
-        "travel_time_seconds": 1042.1,
-        "distance_km": 13.28,
-        "num_sensors": 8
+        "step": 5,
+        "time_of_day": 0.59389,
+        "speed": 70.0,
+        "flow": 890.4
+      },
+      {
+        "step": 6,
+        "time_of_day": 0.59736,
+        "speed": 68.8,
+        "flow": 967.8
+      },
+      {
+        "step": 7,
+        "time_of_day": 0.60083,
+        "speed": 68.7,
+        "flow": 913.5
+      },
+      {
+        "step": 8,
+        "time_of_day": 0.60431,
+        "speed": 69.6,
+        "flow": 913.7
+      },
+      {
+        "step": 9,
+        "time_of_day": 0.60778,
+        "speed": 71.1,
+        "flow": 832.7
+      },
+      {
+        "step": 10,
+        "time_of_day": 0.61125,
+        "speed": 68.5,
+        "flow": 936.5
+      },
+      {
+        "step": 11,
+        "time_of_day": 0.61472,
+        "speed": 69.4,
+        "flow": 932.5
+      },
+      {
+        "step": 12,
+        "time_of_day": 0.61819,
+        "speed": 70.7,
+        "flow": 828.5
+      }
+    ],
+    "400056": [
+      {
+        "step": 1,
+        "time_of_day": 0.58,
+        "speed": 69.0,
+        "flow": 936.1
+      },
+      {
+        "step": 2,
+        "time_of_day": 0.58347,
+        "speed": 69.0,
+        "flow": 910.7
+      },
+      {
+        "step": 3,
+        "time_of_day": 0.58694,
+        "speed": 69.4,
+        "flow": 892.2
+      },
+      {
+        "step": 4,
+        "time_of_day": 0.59042,
+        "speed": 69.7,
+        "flow": 894.9
+      },
+      {
+        "step": 5,
+        "time_of_day": 0.59389,
+        "speed": 69.8,
+        "flow": 896.0
+      },
+      {
+        "step": 6,
+        "time_of_day": 0.59736,
+        "speed": 69.7,
+        "flow": 871.8
+      },
+      {
+        "step": 7,
+        "time_of_day": 0.60083,
+        "speed": 70.4,
+        "flow": 864.6
+      },
+      {
+        "step": 8,
+        "time_of_day": 0.60431,
+        "speed": 70.4,
+        "flow": 843.0
+      },
+      {
+        "step": 9,
+        "time_of_day": 0.60778,
+        "speed": 70.9,
+        "flow": 858.6
+      },
+      {
+        "step": 10,
+        "time_of_day": 0.61125,
+        "speed": 69.8,
+        "flow": 905.5
+      },
+      {
+        "step": 11,
+        "time_of_day": 0.61472,
+        "speed": 69.7,
+        "flow": 894.1
+      },
+      {
+        "step": 12,
+        "time_of_day": 0.61819,
+        "speed": 71.0,
+        "flow": 805.9
+      }
+    ],
+    "400069": [
+      {
+        "step": 1,
+        "time_of_day": 0.58,
+        "speed": 66.4,
+        "flow": 1036.9
+      },
+      {
+        "step": 2,
+        "time_of_day": 0.58347,
+        "speed": 66.3,
+        "flow": 1002.1
+      },
+      {
+        "step": 3,
+        "time_of_day": 0.58694,
+        "speed": 66.0,
+        "flow": 1016.5
+      },
+      {
+        "step": 4,
+        "time_of_day": 0.59042,
+        "speed": 66.1,
+        "flow": 1036.2
+      },
+      {
+        "step": 5,
+        "time_of_day": 0.59389,
+        "speed": 66.5,
+        "flow": 1011.0
+      },
+      {
+        "step": 6,
+        "time_of_day": 0.59736,
+        "speed": 66.3,
+        "flow": 1017.8
+      },
+      {
+        "step": 7,
+        "time_of_day": 0.60083,
+        "speed": 66.9,
+        "flow": 1005.5
+      },
+      {
+        "step": 8,
+        "time_of_day": 0.60431,
+        "speed": 66.5,
+        "flow": 1031.4
+      },
+      {
+        "step": 9,
+        "time_of_day": 0.60778,
+        "speed": 65.1,
+        "flow": 1067.0
+      },
+      {
+        "step": 10,
+        "time_of_day": 0.61125,
+        "speed": 66.0,
+        "flow": 1064.6
+      },
+      {
+        "step": 11,
+        "time_of_day": 0.61472,
+        "speed": 66.6,
+        "flow": 1008.8
+      },
+      {
+        "step": 12,
+        "time_of_day": 0.61819,
+        "speed": 66.5,
+        "flow": 1025.5
+      }
+    ],
+    "400088": [
+      {
+        "step": 1,
+        "time_of_day": 0.58,
+        "speed": 39.4,
+        "flow": 1447.0
+      },
+      {
+        "step": 2,
+        "time_of_day": 0.58347,
+        "speed": 47.6,
+        "flow": 1485.6
+      },
+      {
+        "step": 3,
+        "time_of_day": 0.58694,
+        "speed": 52.0,
+        "flow": 1404.7
+      },
+      {
+        "step": 4,
+        "time_of_day": 0.59042,
+        "speed": 52.3,
+        "flow": 1342.6
+      },
+      {
+        "step": 5,
+        "time_of_day": 0.59389,
+        "speed": 54.7,
+        "flow": 1386.2
+      },
+      {
+        "step": 6,
+        "time_of_day": 0.59736,
+        "speed": 56.4,
+        "flow": 1368.7
+      },
+      {
+        "step": 7,
+        "time_of_day": 0.60083,
+        "speed": 56.7,
+        "flow": 1310.7
+      },
+      {
+        "step": 8,
+        "time_of_day": 0.60431,
+        "speed": 54.5,
+        "flow": 1347.7
+      },
+      {
+        "step": 9,
+        "time_of_day": 0.60778,
+        "speed": 55.9,
+        "flow": 1346.9
+      },
+      {
+        "step": 10,
+        "time_of_day": 0.61125,
+        "speed": 53.7,
+        "flow": 1365.8
+      },
+      {
+        "step": 11,
+        "time_of_day": 0.61472,
+        "speed": 52.6,
+        "flow": 1411.9
+      },
+      {
+        "step": 12,
+        "time_of_day": 0.61819,
+        "speed": 54.2,
+        "flow": 1375.2
+      }
+    ],
+    "400089": [
+      {
+        "step": 1,
+        "time_of_day": 0.58,
+        "speed": 61.4,
+        "flow": 1209.0
+      },
+      {
+        "step": 2,
+        "time_of_day": 0.58347,
+        "speed": 61.9,
+        "flow": 1190.8
+      },
+      {
+        "step": 3,
+        "time_of_day": 0.58694,
+        "speed": 61.7,
+        "flow": 1186.7
+      },
+      {
+        "step": 4,
+        "time_of_day": 0.59042,
+        "speed": 62.4,
+        "flow": 1159.2
+      },
+      {
+        "step": 5,
+        "time_of_day": 0.59389,
+        "speed": 61.9,
+        "flow": 1224.2
+      },
+      {
+        "step": 6,
+        "time_of_day": 0.59736,
+        "speed": 60.6,
+        "flow": 1210.8
+      },
+      {
+        "step": 7,
+        "time_of_day": 0.60083,
+        "speed": 61.7,
+        "flow": 1226.2
+      },
+      {
+        "step": 8,
+        "time_of_day": 0.60431,
+        "speed": 61.9,
+        "flow": 1194.2
+      },
+      {
+        "step": 9,
+        "time_of_day": 0.60778,
+        "speed": 62.5,
+        "flow": 1144.7
+      },
+      {
+        "step": 10,
+        "time_of_day": 0.61125,
+        "speed": 61.5,
+        "flow": 1194.2
+      },
+      {
+        "step": 11,
+        "time_of_day": 0.61472,
+        "speed": 61.5,
+        "flow": 1228.4
+      },
+      {
+        "step": 12,
+        "time_of_day": 0.61819,
+        "speed": 60.4,
+        "flow": 1248.3
+      }
+    ],
+    "400140": [
+      {
+        "step": 1,
+        "time_of_day": 0.58,
+        "speed": 67.2,
+        "flow": 988.9
+      },
+      {
+        "step": 2,
+        "time_of_day": 0.58347,
+        "speed": 67.4,
+        "flow": 983.6
+      },
+      {
+        "step": 3,
+        "time_of_day": 0.58694,
+        "speed": 67.3,
+        "flow": 993.2
+      },
+      {
+        "step": 4,
+        "time_of_day": 0.59042,
+        "speed": 67.3,
+        "flow": 992.4
+      },
+      {
+        "step": 5,
+        "time_of_day": 0.59389,
+        "speed": 67.2,
+        "flow": 985.0
+      },
+      {
+        "step": 6,
+        "time_of_day": 0.59736,
+        "speed": 67.3,
+        "flow": 966.2
+      },
+      {
+        "step": 7,
+        "time_of_day": 0.60083,
+        "speed": 67.3,
+        "flow": 1004.8
+      },
+      {
+        "step": 8,
+        "time_of_day": 0.60431,
+        "speed": 67.2,
+        "flow": 1045.7
+      },
+      {
+        "step": 9,
+        "time_of_day": 0.60778,
+        "speed": 67.3,
+        "flow": 991.3
+      },
+      {
+        "step": 10,
+        "time_of_day": 0.61125,
+        "speed": 67.2,
+        "flow": 978.8
+      },
+      {
+        "step": 11,
+        "time_of_day": 0.61472,
+        "speed": 67.2,
+        "flow": 989.0
+      },
+      {
+        "step": 12,
+        "time_of_day": 0.61819,
+        "speed": 67.3,
+        "flow": 995.6
+      }
+    ],
+    "400157": [
+      {
+        "step": 1,
+        "time_of_day": 0.58,
+        "speed": 69.4,
+        "flow": 929.6
+      },
+      {
+        "step": 2,
+        "time_of_day": 0.58347,
+        "speed": 67.5,
+        "flow": 983.0
+      },
+      {
+        "step": 3,
+        "time_of_day": 0.58694,
+        "speed": 68.6,
+        "flow": 926.5
+      },
+      {
+        "step": 4,
+        "time_of_day": 0.59042,
+        "speed": 70.0,
+        "flow": 849.3
+      },
+      {
+        "step": 5,
+        "time_of_day": 0.59389,
+        "speed": 70.9,
+        "flow": 840.6
+      },
+      {
+        "step": 6,
+        "time_of_day": 0.59736,
+        "speed": 71.6,
+        "flow": 813.6
+      },
+      {
+        "step": 7,
+        "time_of_day": 0.60083,
+        "speed": 71.8,
+        "flow": 823.0
+      },
+      {
+        "step": 8,
+        "time_of_day": 0.60431,
+        "speed": 71.5,
+        "flow": 767.5
+      },
+      {
+        "step": 9,
+        "time_of_day": 0.60778,
+        "speed": 71.2,
+        "flow": 792.9
+      },
+      {
+        "step": 10,
+        "time_of_day": 0.61125,
+        "speed": 70.1,
+        "flow": 884.1
+      },
+      {
+        "step": 11,
+        "time_of_day": 0.61472,
+        "speed": 67.4,
+        "flow": 977.1
+      },
+      {
+        "step": 12,
+        "time_of_day": 0.61819,
+        "speed": 67.6,
+        "flow": 1023.6
+      }
+    ],
+    "400187": [
+      {
+        "step": 1,
+        "time_of_day": 0.58,
+        "speed": 64.2,
+        "flow": 1090.3
+      },
+      {
+        "step": 2,
+        "time_of_day": 0.58347,
+        "speed": 64.1,
+        "flow": 1121.5
+      },
+      {
+        "step": 3,
+        "time_of_day": 0.58694,
+        "speed": 64.3,
+        "flow": 1113.1
+      },
+      {
+        "step": 4,
+        "time_of_day": 0.59042,
+        "speed": 47.6,
+        "flow": 1480.7
+      },
+      {
+        "step": 5,
+        "time_of_day": 0.59389,
+        "speed": 34.6,
+        "flow": 1447.3
+      },
+      {
+        "step": 6,
+        "time_of_day": 0.59736,
+        "speed": 28.4,
+        "flow": 1324.9
+      },
+      {
+        "step": 7,
+        "time_of_day": 0.60083,
+        "speed": 25.6,
+        "flow": 1231.3
+      },
+      {
+        "step": 8,
+        "time_of_day": 0.60431,
+        "speed": 23.8,
+        "flow": 1189.5
+      },
+      {
+        "step": 9,
+        "time_of_day": 0.60778,
+        "speed": 23.0,
+        "flow": 1131.1
+      },
+      {
+        "step": 10,
+        "time_of_day": 0.61125,
+        "speed": 22.6,
+        "flow": 1155.5
+      },
+      {
+        "step": 11,
+        "time_of_day": 0.61472,
+        "speed": 25.0,
+        "flow": 1282.9
+      },
+      {
+        "step": 12,
+        "time_of_day": 0.61819,
+        "speed": 26.0,
+        "flow": 1306.8
+      }
+    ],
+    "400188": [
+      {
+        "step": 1,
+        "time_of_day": 0.58,
+        "speed": 67.7,
+        "flow": 980.5
+      },
+      {
+        "step": 2,
+        "time_of_day": 0.58347,
+        "speed": 66.9,
+        "flow": 1026.6
+      },
+      {
+        "step": 3,
+        "time_of_day": 0.58694,
+        "speed": 67.1,
+        "flow": 1012.5
+      },
+      {
+        "step": 4,
+        "time_of_day": 0.59042,
+        "speed": 42.0,
+        "flow": 1500.0
+      },
+      {
+        "step": 5,
+        "time_of_day": 0.59389,
+        "speed": 24.4,
+        "flow": 1206.4
+      },
+      {
+        "step": 6,
+        "time_of_day": 0.59736,
+        "speed": 15.6,
+        "flow": 909.7
+      },
+      {
+        "step": 7,
+        "time_of_day": 0.60083,
+        "speed": 11.7,
+        "flow": 715.3
+      },
+      {
+        "step": 8,
+        "time_of_day": 0.60431,
+        "speed": 8.4,
+        "flow": 545.4
+      },
+      {
+        "step": 9,
+        "time_of_day": 0.60778,
+        "speed": 7.0,
+        "flow": 438.5
+      },
+      {
+        "step": 10,
+        "time_of_day": 0.61125,
+        "speed": 7.2,
+        "flow": 458.7
+      },
+      {
+        "step": 11,
+        "time_of_day": 0.61472,
+        "speed": 9.6,
+        "flow": 613.6
+      },
+      {
+        "step": 12,
+        "time_of_day": 0.61819,
+        "speed": 10.9,
+        "flow": 673.7
+      }
+    ],
+    "400204": [
+      {
+        "step": 1,
+        "time_of_day": 0.58,
+        "speed": 61.1,
+        "flow": 1209.3
+      },
+      {
+        "step": 2,
+        "time_of_day": 0.58347,
+        "speed": 61.4,
+        "flow": 1206.8
+      },
+      {
+        "step": 3,
+        "time_of_day": 0.58694,
+        "speed": 61.0,
+        "flow": 1242.7
+      },
+      {
+        "step": 4,
+        "time_of_day": 0.59042,
+        "speed": 61.4,
+        "flow": 1255.4
+      },
+      {
+        "step": 5,
+        "time_of_day": 0.59389,
+        "speed": 62.2,
+        "flow": 1166.5
+      },
+      {
+        "step": 6,
+        "time_of_day": 0.59736,
+        "speed": 61.4,
+        "flow": 1216.6
+      },
+      {
+        "step": 7,
+        "time_of_day": 0.60083,
+        "speed": 60.3,
+        "flow": 1222.3
+      },
+      {
+        "step": 8,
+        "time_of_day": 0.60431,
+        "speed": 58.0,
+        "flow": 1272.6
+      },
+      {
+        "step": 9,
+        "time_of_day": 0.60778,
+        "speed": 53.8,
+        "flow": 1416.8
+      },
+      {
+        "step": 10,
+        "time_of_day": 0.61125,
+        "speed": 52.0,
+        "flow": 1409.8
+      },
+      {
+        "step": 11,
+        "time_of_day": 0.61472,
+        "speed": 49.3,
+        "flow": 1483.3
+      },
+      {
+        "step": 12,
+        "time_of_day": 0.61819,
+        "speed": 46.8,
+        "flow": 1500.0
+      }
+    ],
+    "400215": [
+      {
+        "step": 1,
+        "time_of_day": 0.58,
+        "speed": 64.3,
+        "flow": 1083.6
+      },
+      {
+        "step": 2,
+        "time_of_day": 0.58347,
+        "speed": 64.0,
+        "flow": 1119.7
+      },
+      {
+        "step": 3,
+        "time_of_day": 0.58694,
+        "speed": 64.2,
+        "flow": 1142.6
+      },
+      {
+        "step": 4,
+        "time_of_day": 0.59042,
+        "speed": 63.9,
+        "flow": 1132.3
+      },
+      {
+        "step": 5,
+        "time_of_day": 0.59389,
+        "speed": 64.4,
+        "flow": 1146.2
+      },
+      {
+        "step": 6,
+        "time_of_day": 0.59736,
+        "speed": 65.3,
+        "flow": 1093.1
+      },
+      {
+        "step": 7,
+        "time_of_day": 0.60083,
+        "speed": 65.6,
+        "flow": 1067.7
+      },
+      {
+        "step": 8,
+        "time_of_day": 0.60431,
+        "speed": 65.5,
+        "flow": 1051.5
+      },
+      {
+        "step": 9,
+        "time_of_day": 0.60778,
+        "speed": 64.5,
+        "flow": 1119.1
+      },
+      {
+        "step": 10,
+        "time_of_day": 0.61125,
+        "speed": 64.0,
+        "flow": 1093.0
+      },
+      {
+        "step": 11,
+        "time_of_day": 0.61472,
+        "speed": 64.5,
+        "flow": 1073.7
+      },
+      {
+        "step": 12,
+        "time_of_day": 0.61819,
+        "speed": 64.5,
+        "flow": 1118.6
+      }
+    ],
+    "400217": [
+      {
+        "step": 1,
+        "time_of_day": 0.58,
+        "speed": 69.5,
+        "flow": 889.0
+      },
+      {
+        "step": 2,
+        "time_of_day": 0.58347,
+        "speed": 70.2,
+        "flow": 887.6
+      },
+      {
+        "step": 3,
+        "time_of_day": 0.58694,
+        "speed": 71.3,
+        "flow": 809.8
+      },
+      {
+        "step": 4,
+        "time_of_day": 0.59042,
+        "speed": 71.7,
+        "flow": 783.3
+      },
+      {
+        "step": 5,
+        "time_of_day": 0.59389,
+        "speed": 71.7,
+        "flow": 791.6
+      },
+      {
+        "step": 6,
+        "time_of_day": 0.59736,
+        "speed": 72.2,
+        "flow": 759.3
+      },
+      {
+        "step": 7,
+        "time_of_day": 0.60083,
+        "speed": 72.2,
+        "flow": 782.8
+      },
+      {
+        "step": 8,
+        "time_of_day": 0.60431,
+        "speed": 71.6,
+        "flow": 838.2
+      },
+      {
+        "step": 9,
+        "time_of_day": 0.60778,
+        "speed": 72.1,
+        "flow": 758.2
+      },
+      {
+        "step": 10,
+        "time_of_day": 0.61125,
+        "speed": 69.9,
+        "flow": 891.7
+      },
+      {
+        "step": 11,
+        "time_of_day": 0.61472,
+        "speed": 70.7,
+        "flow": 864.7
+      },
+      {
+        "step": 12,
+        "time_of_day": 0.61819,
+        "speed": 71.4,
+        "flow": 829.6
+      }
+    ],
+    "400253": [
+      {
+        "step": 1,
+        "time_of_day": 0.58,
+        "speed": 71.0,
+        "flow": 811.9
+      },
+      {
+        "step": 2,
+        "time_of_day": 0.58347,
+        "speed": 71.3,
+        "flow": 829.5
+      },
+      {
+        "step": 3,
+        "time_of_day": 0.58694,
+        "speed": 71.3,
+        "flow": 810.5
+      },
+      {
+        "step": 4,
+        "time_of_day": 0.59042,
+        "speed": 72.4,
+        "flow": 741.7
+      },
+      {
+        "step": 5,
+        "time_of_day": 0.59389,
+        "speed": 71.3,
+        "flow": 805.2
+      },
+      {
+        "step": 6,
+        "time_of_day": 0.59736,
+        "speed": 70.9,
+        "flow": 844.9
+      },
+      {
+        "step": 7,
+        "time_of_day": 0.60083,
+        "speed": 69.6,
+        "flow": 886.1
+      },
+      {
+        "step": 8,
+        "time_of_day": 0.60431,
+        "speed": 69.6,
+        "flow": 896.7
+      },
+      {
+        "step": 9,
+        "time_of_day": 0.60778,
+        "speed": 70.1,
+        "flow": 875.5
+      },
+      {
+        "step": 10,
+        "time_of_day": 0.61125,
+        "speed": 70.4,
+        "flow": 865.0
+      },
+      {
+        "step": 11,
+        "time_of_day": 0.61472,
+        "speed": 70.7,
+        "flow": 831.8
+      },
+      {
+        "step": 12,
+        "time_of_day": 0.61819,
+        "speed": 71.7,
+        "flow": 783.5
+      }
+    ],
+    "400303": [
+      {
+        "step": 1,
+        "time_of_day": 0.58,
+        "speed": 48.2,
+        "flow": 1490.0
+      },
+      {
+        "step": 2,
+        "time_of_day": 0.58347,
+        "speed": 52.5,
+        "flow": 1446.9
+      },
+      {
+        "step": 3,
+        "time_of_day": 0.58694,
+        "speed": 48.7,
+        "flow": 1489.8
+      },
+      {
+        "step": 4,
+        "time_of_day": 0.59042,
+        "speed": 47.3,
+        "flow": 1439.0
+      },
+      {
+        "step": 5,
+        "time_of_day": 0.59389,
+        "speed": 46.7,
+        "flow": 1459.2
+      },
+      {
+        "step": 6,
+        "time_of_day": 0.59736,
+        "speed": 47.9,
+        "flow": 1485.4
+      },
+      {
+        "step": 7,
+        "time_of_day": 0.60083,
+        "speed": 42.5,
+        "flow": 1470.9
+      },
+      {
+        "step": 8,
+        "time_of_day": 0.60431,
+        "speed": 42.5,
+        "flow": 1500.0
+      },
+      {
+        "step": 9,
+        "time_of_day": 0.60778,
+        "speed": 40.4,
+        "flow": 1500.0
+      },
+      {
+        "step": 10,
+        "time_of_day": 0.61125,
+        "speed": 46.2,
+        "flow": 1457.6
+      },
+      {
+        "step": 11,
+        "time_of_day": 0.61472,
+        "speed": 40.3,
+        "flow": 1500.0
+      },
+      {
+        "step": 12,
+        "time_of_day": 0.61819,
+        "speed": 43.5,
+        "flow": 1402.6
+      }
+    ],
+    "400307": [
+      {
+        "step": 1,
+        "time_of_day": 0.58,
+        "speed": 29.4,
+        "flow": 1327.3
+      },
+      {
+        "step": 2,
+        "time_of_day": 0.58347,
+        "speed": 31.3,
+        "flow": 1403.8
+      },
+      {
+        "step": 3,
+        "time_of_day": 0.58694,
+        "speed": 30.6,
+        "flow": 1360.9
+      },
+      {
+        "step": 4,
+        "time_of_day": 0.59042,
+        "speed": 29.0,
+        "flow": 1333.4
+      },
+      {
+        "step": 5,
+        "time_of_day": 0.59389,
+        "speed": 29.1,
+        "flow": 1340.1
+      },
+      {
+        "step": 6,
+        "time_of_day": 0.59736,
+        "speed": 27.8,
+        "flow": 1329.0
+      },
+      {
+        "step": 7,
+        "time_of_day": 0.60083,
+        "speed": 29.1,
+        "flow": 1291.9
+      },
+      {
+        "step": 8,
+        "time_of_day": 0.60431,
+        "speed": 29.0,
+        "flow": 1365.9
+      },
+      {
+        "step": 9,
+        "time_of_day": 0.60778,
+        "speed": 29.0,
+        "flow": 1398.3
+      },
+      {
+        "step": 10,
+        "time_of_day": 0.61125,
+        "speed": 29.8,
+        "flow": 1284.0
+      },
+      {
+        "step": 11,
+        "time_of_day": 0.61472,
+        "speed": 28.2,
+        "flow": 1334.5
+      },
+      {
+        "step": 12,
+        "time_of_day": 0.61819,
+        "speed": 30.1,
+        "flow": 1316.7
+      }
+    ],
+    "400308": [
+      {
+        "step": 1,
+        "time_of_day": 0.58,
+        "speed": 47.1,
+        "flow": 1460.4
+      },
+      {
+        "step": 2,
+        "time_of_day": 0.58347,
+        "speed": 32.8,
+        "flow": 1446.9
+      },
+      {
+        "step": 3,
+        "time_of_day": 0.58694,
+        "speed": 28.8,
+        "flow": 1354.7
+      },
+      {
+        "step": 4,
+        "time_of_day": 0.59042,
+        "speed": 38.9,
+        "flow": 1500.0
+      },
+      {
+        "step": 5,
+        "time_of_day": 0.59389,
+        "speed": 34.6,
+        "flow": 1417.5
+      },
+      {
+        "step": 6,
+        "time_of_day": 0.59736,
+        "speed": 42.7,
+        "flow": 1500.0
+      },
+      {
+        "step": 7,
+        "time_of_day": 0.60083,
+        "speed": 44.9,
+        "flow": 1479.1
+      },
+      {
+        "step": 8,
+        "time_of_day": 0.60431,
+        "speed": 43.9,
+        "flow": 1500.0
+      },
+      {
+        "step": 9,
+        "time_of_day": 0.60778,
+        "speed": 36.0,
+        "flow": 1428.2
+      },
+      {
+        "step": 10,
+        "time_of_day": 0.61125,
+        "speed": 40.8,
+        "flow": 1500.0
+      },
+      {
+        "step": 11,
+        "time_of_day": 0.61472,
+        "speed": 36.0,
+        "flow": 1465.0
+      },
+      {
+        "step": 12,
+        "time_of_day": 0.61819,
+        "speed": 32.3,
+        "flow": 1374.4
       }
     ]
   }
