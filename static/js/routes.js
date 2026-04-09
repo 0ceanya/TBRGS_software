@@ -4,6 +4,8 @@ let map,
     sensorData = [],
     routeLayers = [],
     polylineLayers = [];
+/** Incremented on each new search so in-flight path animations cancel */
+let routeAnimationGeneration = 0;
 let originMarker, destMarker;
 /** 'sensor' = use dropdown; 'map' = use dragged pin position */
 let originMode = 'sensor';
@@ -379,6 +381,103 @@ function buildRoadWaypointsFromPath(route) {
     return pts;
 }
 
+function easeOutCubic(t) {
+    return 1 - Math.pow(1 - t, 3);
+}
+
+/** Precompute segment lengths (meters) for progressive polyline drawing */
+function buildPolylineSampler(latlngs, mapInstance) {
+    if (!latlngs || latlngs.length < 2) {
+        return { latlngs: latlngs || [], segLens: [], total: 0 };
+    }
+    const segLens = [];
+    let total = 0;
+    for (let i = 1; i < latlngs.length; i++) {
+        const d = mapInstance.distance(L.latLng(latlngs[i - 1]), L.latLng(latlngs[i]));
+        segLens.push(d);
+        total += d;
+    }
+    return { latlngs, segLens, total };
+}
+
+/** Points along the polyline from the start up to targetDist meters */
+function latlngsAtDistance(sampler, targetDist) {
+    const { latlngs, segLens, total } = sampler;
+    if (latlngs.length < 2) return latlngs.length ? [latlngs[0], latlngs[0]] : [];
+    const clamped = Math.max(0, Math.min(targetDist, total));
+    if (clamped <= 0) {
+        const p = latlngs[0];
+        return [p, p];
+    }
+    if (clamped >= total) return latlngs;
+
+    const out = [latlngs[0]];
+    let acc = 0;
+    for (let i = 0; i < segLens.length; i++) {
+        const seg = segLens[i];
+        if (acc + seg >= clamped) {
+            const t = (clamped - acc) / seg;
+            const a = L.latLng(latlngs[i]);
+            const b = L.latLng(latlngs[i + 1]);
+            out.push([a.lat + t * (b.lat - a.lat), a.lng + t * (b.lng - a.lng)]);
+            return out;
+        }
+        acc += seg;
+        out.push(latlngs[i + 1]);
+    }
+    return out;
+}
+
+/**
+ * Reveal the route along the road geometry, with a moving "front" marker.
+ * @returns {Promise<L.Polyline|null>} the polyline, or null if cancelled
+ */
+function animateRoutePolyline(mapInstance, latlngs, lineStyle, durationMs, isAlive) {
+    const sampler = buildPolylineSampler(latlngs, mapInstance);
+    if (sampler.total <= 0 || latlngs.length < 2) {
+        const line = L.polyline(latlngs, lineStyle).addTo(mapInstance);
+        return Promise.resolve(line);
+    }
+
+    const startPt = latlngs[0];
+    const poly = L.polyline([startPt, startPt], lineStyle).addTo(mapInstance);
+    const head = L.circleMarker(L.latLng(startPt), {
+        radius: 7,
+        color: lineStyle.color || '#2563eb',
+        fillColor: '#ffffff',
+        fillOpacity: 0.95,
+        weight: 3,
+        className: 'route-search-head',
+    }).addTo(mapInstance);
+
+    const start = performance.now();
+
+    return new Promise((resolve) => {
+        function frame(now) {
+            if (!isAlive()) {
+                mapInstance.removeLayer(poly);
+                mapInstance.removeLayer(head);
+                resolve(null);
+                return;
+            }
+            const raw = Math.min(1, (now - start) / durationMs);
+            const eased = easeOutCubic(raw);
+            const dist = eased * sampler.total;
+            const pts = latlngsAtDistance(sampler, dist);
+            poly.setLatLngs(pts.length >= 2 ? pts : [startPt, startPt]);
+            head.setLatLng(pts[pts.length - 1]);
+            if (raw < 1) {
+                requestAnimationFrame(frame);
+            } else {
+                poly.setLatLngs(latlngs);
+                mapInstance.removeLayer(head);
+                resolve(poly);
+            }
+        }
+        requestAnimationFrame(frame);
+    });
+}
+
 function renderForecastSection(data) {
     const intro = document.getElementById('forecast-intro');
     const section = document.getElementById('forecast-section');
@@ -437,6 +536,9 @@ async function findRoutes() {
     btn.disabled = true;
     setStatus(status, 'Finding routes...', 'loading');
 
+    routeAnimationGeneration += 1;
+    const animGen = routeAnimationGeneration;
+
     routeLayers.forEach((l) => map.removeLayer(l));
     routeLayers = [];
     polylineLayers = [];
@@ -460,7 +562,7 @@ async function findRoutes() {
         renderForecastSection(data);
 
         setStatus(status, 'Snapping routes to roads...', 'loading');
-        await renderRoutes(data.routes, data.endpoints);
+        await renderRoutes(data.routes, animGen, status);
         let msg = `Found ${data.count} route(s)`;
         if (data.endpoints) {
             const eo = data.endpoints.origin;
@@ -479,7 +581,7 @@ async function findRoutes() {
     btn.disabled = false;
 }
 
-async function renderRoutes(routes) {
+async function renderRoutes(routes, animGen, statusEl) {
     const tbody = document.getElementById('results-body');
     tbody.innerHTML = '';
 
@@ -490,27 +592,67 @@ async function renderRoutes(routes) {
         routes.map((route) => getOSRMRoute(buildRoadWaypointsFromPath(route))),
     );
 
+    if (animGen !== routeAnimationGeneration) return;
+
+    let bounds = L.latLngBounds([]);
+    roadGeometries.forEach((latlngs) => {
+        latlngs.forEach((p) => bounds.extend(p));
+    });
+    if (bounds.isValid()) {
+        bounds.extend(originMarker.getLatLng());
+        bounds.extend(destMarker.getLatLng());
+        map.fitBounds(bounds.pad(0.1));
+    }
+
     routes.forEach((route, i) => {
         const tr = document.createElement('tr');
         tr.innerHTML = `
-            <td><span style="color:${ROUTE_COLORS[i]}; font-weight:700">${i + 1}</span></td>
+            <td><span style="color:${ROUTE_COLORS[i % ROUTE_COLORS.length]}; font-weight:700">${i + 1}</span></td>
             <td>${route.travel_time_display}</td>
             <td>${route.distance_km} km</td>
             <td>${route.num_sensors}</td>
         `;
         tr.addEventListener('click', () => highlightRoute(i));
         tbody.appendChild(tr);
+    });
 
-        const latlngs = roadGeometries[i];
-        if (latlngs.length > 1) {
-            const polyline = L.polyline(latlngs, {
-                color: ROUTE_COLORS[i % ROUTE_COLORS.length],
-                weight: i === 0 ? 5 : 3,
-                opacity: i === 0 ? 0.9 : 0.6,
-            }).addTo(map);
-            routeLayers.push(polyline);
-            polylineLayers.push(polyline);
+    if (statusEl && animGen === routeAnimationGeneration) {
+        setStatus(statusEl, 'Tracing routes on the map...', 'loading');
+    }
+
+    for (let i = 0; i < routes.length; i++) {
+        if (animGen !== routeAnimationGeneration) return;
+
+        if (i > 0) {
+            await new Promise((r) => setTimeout(r, 180));
+            if (animGen !== routeAnimationGeneration) return;
         }
+
+        const route = routes[i];
+        const latlngs = roadGeometries[i];
+        if (latlngs.length < 2) continue;
+
+        const lineStyle = {
+            color: ROUTE_COLORS[i % ROUTE_COLORS.length],
+            weight: i === 0 ? 5 : 3,
+            opacity: i === 0 ? 0.9 : 0.6,
+        };
+
+        const sampler = buildPolylineSampler(latlngs, map);
+        const duration = Math.min(2600, Math.max(750, sampler.total / 2.8));
+
+        const polyline = await animateRoutePolyline(
+            map,
+            latlngs,
+            lineStyle,
+            duration,
+            () => animGen === routeAnimationGeneration,
+        );
+
+        if (polyline == null) return;
+
+        routeLayers.push(polyline);
+        polylineLayers.push(polyline);
 
         route.path.forEach((sid, j) => {
             const pos = sensorMap[sid];
@@ -529,11 +671,6 @@ async function renderRoutes(routes) {
                 routeLayers.push(dot);
             }
         });
-    });
-
-    if (routeLayers.length > 0) {
-        const group = L.featureGroup([...routeLayers, originMarker, destMarker]);
-        map.fitBounds(group.getBounds().pad(0.1));
     }
 }
 

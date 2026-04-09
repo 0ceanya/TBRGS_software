@@ -308,6 +308,21 @@ select.input[size] {
 .status.error { color: var(--error); }
 .status.success { color: var(--success); }
 
+/* animated “search front” while a route is drawing */
+.route-search-head {
+    animation: route-head-pulse 0.85s ease-in-out infinite;
+}
+
+@keyframes route-head-pulse {
+    0%,
+    100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.4;
+    }
+}
+
 /* Map */
 .map-container {
     height: 420px;
