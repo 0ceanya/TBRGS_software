@@ -72,13 +72,17 @@ def create_app(app_settings=None) -> FastAPI:
 
     # OSRM proxy -- avoids browser CORS issues with the public OSRM API
     @app.get("/api/osrm")
-    async def osrm_proxy(coords: str) -> dict:
+    async def osrm_proxy(coords: str, alternatives: bool = False) -> dict:
         """Proxy OSRM route requests to get road-following geometries.
 
         Args:
             coords: semicolon-separated lon,lat pairs (e.g. "-121.9,37.3;-121.8,37.4")
+            alternatives: if True, OSRM may return multiple driving routes (same O/D).
         """
-        url = f"https://router.project-osrm.org/route/v1/driving/{coords}?overview=full&geometries=geojson"
+        q = "overview=full&geometries=geojson"
+        if alternatives:
+            q += "&alternatives=true"
+        url = f"https://router.project-osrm.org/route/v1/driving/{coords}?{q}"
         async with httpx.AsyncClient(timeout=10) as client:
             resp = await client.get(url)
             return resp.json()

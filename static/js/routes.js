@@ -333,52 +333,40 @@ function buildRouteFindBody() {
 }
 
 /**
- * Fetch road-following geometry from OSRM for a list of waypoints.
- * Falls back to straight lines if the request fails.
+ * Map lines: OSRM “best” driving path(s) between the A and B pins only.
+ * Travel time / distance in the table still come from the sensor graph + model.
  */
-async function getOSRMRoute(waypoints) {
-    if (waypoints.length < 2) return waypoints;
-
-    const coords = waypoints.map(([lat, lon]) => `${lon},${lat}`).join(';');
-
-    try {
-        const res = await fetch(`/api/osrm?coords=${encodeURIComponent(coords)}`);
-        if (!res.ok) return waypoints;
-        const data = await res.json();
-        if (data.code !== 'Ok' || !data.routes?.[0]) return waypoints;
-        return data.routes[0].geometry.coordinates.map(([lon, lat]) => [lat, lon]);
-    } catch {
-        return waypoints;
-    }
-}
-
-/** Minimum gap (meters) before prepending A / appending B so OSRM draws to the pins. */
-const PIN_GAP_MIN_M = 5;
-
-/**
- * OSRM is called with sensor centers along the graph path; the user's pins can sit
- * away from those snaps (or off the road polyline end). Extend waypoints so the
- * driving line reaches A and B.
- */
-function buildRoadWaypointsFromPath(route) {
-    const sensorMap = {};
-    sensorData.forEach((s) => (sensorMap[s.id] = [s.lat, s.lon]));
-
-    let pts = route.path.map((sid) => sensorMap[sid]).filter(Boolean);
-    if (pts.length < 2) return pts;
-
+async function fetchPinToPinDrivingGeometries(numRoutes) {
     const o = originMarker.getLatLng();
     const d = destMarker.getLatLng();
-    const firstSensor = pts[0];
-    const lastSensor = pts[pts.length - 1];
+    const coords = `${o.lng},${o.lat};${d.lng},${d.lat}`;
+    const pinA = [o.lat, o.lng];
+    const pinB = [d.lat, d.lng];
+    const straight = [pinA, pinB];
 
-    if (o.distanceTo(L.latLng(firstSensor[0], firstSensor[1])) >= PIN_GAP_MIN_M) {
-        pts = [[o.lat, o.lng], ...pts];
+    let url = `/api/osrm?coords=${encodeURIComponent(coords)}`;
+    if (numRoutes > 1) {
+        url += '&alternatives=true';
     }
-    if (d.distanceTo(L.latLng(lastSensor[0], lastSensor[1])) >= PIN_GAP_MIN_M) {
-        pts = [...pts, [d.lat, d.lng]];
+
+    try {
+        const res = await fetch(url);
+        if (!res.ok) throw new Error('osrm http');
+        const data = await res.json();
+        if (data.code !== 'Ok' || !data.routes?.length) throw new Error('osrm response');
+
+        const geoms = data.routes.map((r) =>
+            r.geometry.coordinates.map(([lon, lat]) => [lat, lon]),
+        );
+        const out = [];
+        for (let i = 0; i < numRoutes; i++) {
+            const g = geoms[Math.min(i, geoms.length - 1)];
+            out.push(g.length >= 2 ? g : straight);
+        }
+        return out;
+    } catch {
+        return Array.from({ length: numRoutes }, () => straight);
     }
-    return pts;
 }
 
 function easeOutCubic(t) {
@@ -585,12 +573,7 @@ async function renderRoutes(routes, animGen, statusEl) {
     const tbody = document.getElementById('results-body');
     tbody.innerHTML = '';
 
-    const sensorMap = {};
-    sensorData.forEach((s) => (sensorMap[s.id] = [s.lat, s.lon]));
-
-    const roadGeometries = await Promise.all(
-        routes.map((route) => getOSRMRoute(buildRoadWaypointsFromPath(route))),
-    );
+    const roadGeometries = await fetchPinToPinDrivingGeometries(routes.length);
 
     if (animGen !== routeAnimationGeneration) return;
 
@@ -628,15 +611,19 @@ async function renderRoutes(routes, animGen, statusEl) {
             if (animGen !== routeAnimationGeneration) return;
         }
 
-        const route = routes[i];
         const latlngs = roadGeometries[i];
         if (latlngs.length < 2) continue;
 
         const lineStyle = {
             color: ROUTE_COLORS[i % ROUTE_COLORS.length],
-            weight: i === 0 ? 5 : 3,
-            opacity: i === 0 ? 0.9 : 0.6,
+            weight: i === 0 ? 5 : 4,
+            opacity: i === 0 ? 0.92 : 0.52,
+            lineCap: 'round',
+            lineJoin: 'round',
         };
+        if (i > 0) {
+            lineStyle.dashArray = '12, 10';
+        }
 
         const sampler = buildPolylineSampler(latlngs, map);
         const duration = Math.min(2600, Math.max(750, sampler.total / 2.8));
@@ -653,24 +640,6 @@ async function renderRoutes(routes, animGen, statusEl) {
 
         routeLayers.push(polyline);
         polylineLayers.push(polyline);
-
-        route.path.forEach((sid, j) => {
-            const pos = sensorMap[sid];
-            if (!pos) return;
-            const isEndpoint = j === 0 || j === route.path.length - 1;
-            if (!isEndpoint) {
-                const dot = L.circleMarker(pos, {
-                    radius: 5,
-                    color: ROUTE_COLORS[i % ROUTE_COLORS.length],
-                    fillColor: '#fff',
-                    fillOpacity: 1,
-                    weight: 2,
-                })
-                    .bindTooltip(`Sensor ${sid}`)
-                    .addTo(map);
-                routeLayers.push(dot);
-            }
-        });
     }
 }
 
@@ -679,9 +648,11 @@ function highlightRoute(index) {
         tr.classList.toggle('active', i === index);
     });
     polylineLayers.forEach((layer, i) => {
+        const isAlt = i > 0;
         layer.setStyle({
-            weight: i === index ? 6 : 3,
-            opacity: i === index ? 1.0 : 0.4,
+            weight: i === index ? 6 : isAlt ? 4 : 5,
+            opacity: i === index ? 1.0 : 0.35,
+            dashArray: isAlt ? '12, 10' : undefined,
         });
         if (i === index) layer.bringToFront();
     });
