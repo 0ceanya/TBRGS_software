@@ -1,0 +1,28 @@
+[project]
+name = "tbrgs"
+version = "0.1.0"
+description = "Traffic-Based Route Guidance System (PEMS-BAY sensor routing)"
+readme = "README"
+requires-python = ">=3.11"
+dependencies = [
+    "numpy>=2.0",
+    "scipy>=1.10",
+    "matplotlib>=3.8",
+    "networkx>=3.0",
+    "osmnx>=2.0",
+    "geopandas>=1.0",
+    "pyproj>=3.6",
+    "shapely>=2.0",
+    "requests>=2.30",
+    "folium>=0.17",
+    "fastapi>=0.100",
+    "uvicorn[standard]>=0.20",
+    "jinja2>=3.1",
+    "httpx>=0.24",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=7.0"]
+
+[tool.uv]
+package = false

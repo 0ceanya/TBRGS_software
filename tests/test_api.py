@@ -59,6 +59,32 @@ class TestRoutesAPI:
         assert route["path"][0] == "402365"
         assert route["path"][-1] == "401129"
         assert route["travel_time_seconds"] > 0
+        assert data["endpoints"]["origin"]["source"] == "sensor"
+        assert data["endpoints"]["destination"]["source"] == "sensor"
+
+    def test_find_routes_custom_coordinates(self):
+        """POST with lat/lon snaps to sensors and returns endpoints metadata."""
+        response = client.post(
+            "/api/routes/find",
+            json={
+                "origin": "",
+                "destination": "",
+                "origin_lat": 37.4,
+                "origin_lon": -121.95,
+                "dest_lat": 37.35,
+                "dest_lon": -121.9,
+                "model": "mock",
+                "algorithm": "AS",
+                "k": 2,
+            },
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert data.get("error") is None
+        assert len(data["routes"]) >= 1
+        assert data["endpoints"]["origin"]["source"] == "coordinates"
+        assert data["endpoints"]["destination"]["source"] == "coordinates"
+        assert data["routes"][0]["path"][0] == data["endpoints"]["origin"]["sensor_id"]
 
     def test_invalid_sensor_returns_error(self):
         """Invalid sensor ID returns error in response."""

@@ -43,7 +43,7 @@ async function compare() {
         origin: document.getElementById('cmp-origin').value,
         destination: document.getElementById('cmp-destination').value,
         algorithm: document.getElementById('cmp-algorithm').value,
-        models: models,
+        models,
         k: 5,
     };
 
@@ -54,7 +54,7 @@ async function compare() {
             body: JSON.stringify(body),
         });
 
-        renderComparison(data.comparisons);
+        renderComparison(data.comparisons, data.endpoints);
         setStatus(status, 'Comparison complete', 'success');
     } catch (e) {
         setStatus(status, e.message, 'error');
@@ -62,9 +62,31 @@ async function compare() {
     btn.disabled = false;
 }
 
-function renderComparison(comparisons) {
+function renderComparison(comparisons, endpoints) {
     const container = document.getElementById('comparison-results');
     container.innerHTML = '';
+
+    if (endpoints) {
+        const epRow = document.createElement('div');
+        epRow.className = 'comparison-endpoints';
+        const o = endpoints.origin;
+        const d = endpoints.destination;
+        let html = '<p class="field-hint"><strong>Endpoints</strong>: ';
+        if (o.source === 'coordinates') {
+            html += `origin from (${o.requested_lat}, ${o.requested_lon}) → nearest sensor <code>${o.sensor_id}</code>`;
+        } else {
+            html += `origin sensor <code>${o.sensor_id}</code>`;
+        }
+        html += '; ';
+        if (d.source === 'coordinates') {
+            html += `destination from (${d.requested_lat}, ${d.requested_lon}) → nearest sensor <code>${d.sensor_id}</code>`;
+        } else {
+            html += `destination sensor <code>${d.sensor_id}</code>`;
+        }
+        html += '</p>';
+        epRow.innerHTML = html;
+        container.appendChild(epRow);
+    }
 
     for (const [model, result] of Object.entries(comparisons)) {
         const card = document.createElement('div');

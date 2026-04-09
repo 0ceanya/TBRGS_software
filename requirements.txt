@@ -1,3 +1,4 @@
+# Also declared in pyproject.toml — prefer: uv sync --extra dev
 numpy>=2.0
 scipy>=1.10
 matplotlib>=3.8

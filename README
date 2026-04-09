@@ -1,3 +1,16 @@
+UV (recommended)
+  uv sync --extra dev          # create .venv + install deps (incl. pytest)
+  uv run python main.py        # web app → http://127.0.0.1:8000
+  uv run pytest                # tests
+  uv run python src/utils/map_osm.py --path 402365 401129
+
+  Lockfile: uv lock / uv sync --locked (after dependency changes)
+
+Classic venv + pip
+  python3 -m venv .venv && source .venv/bin/activate && pip install -r requirements.txt && python main.py
+
+---
+
 src/utils/map_osm.py — new interactive OSM map                                                                                                   
                                                                                                                                                    
   - Real OSM tiles via Folium/Leaflet.js — actual street map you can pan & zoom                                                                    

@@ -7,8 +7,9 @@ Launch:
     python main.py                 # http://localhost:8000
     python main.py --port 8080     # custom port
 
-Dependencies:
-    pip install -r requirements.txt
+Dependencies (uv recommended):
+    uv sync --extra dev
+    # or: pip install -r requirements.txt
 """
 
 import argparse

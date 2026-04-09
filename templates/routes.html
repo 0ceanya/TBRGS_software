@@ -5,7 +5,7 @@
 {% block content %}
 <div class="page-header">
     <h1>Route Finding</h1>
-    <p class="subtitle">Select origin and destination sensors to find optimal routes based on predicted traffic flow.</p>
+    <p class="subtitle">Pick sensors from the list or drag the green (start) and red (end) pins on the map. Map positions snap to the nearest sensor when finding routes.</p>
 </div>
 
 <div class="layout-split">
@@ -15,12 +15,16 @@
         <div class="field">
             <label for="origin">Origin Sensor</label>
             <select id="origin" class="input"></select>
+            <p class="field-hint">Changing this moves the green start pin. Drag the pin on the map to use a custom spot instead.</p>
         </div>
 
         <div class="field">
             <label for="destination">Destination Sensor</label>
             <select id="destination" class="input"></select>
+            <p class="field-hint">Changing this moves the red end pin. Drag the pin to set the destination visually.</p>
         </div>
+
+        <div class="field map-mode-hint" id="map-mode-hint" aria-live="polite"></div>
 
         <div class="field">
             <label for="model">Prediction Model</label>

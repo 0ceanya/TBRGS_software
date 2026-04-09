@@ -8,7 +8,7 @@ class TestRouteFinder:
 
     def test_find_routes_mock(self):
         """TC-09: Full pipeline produces valid routes from 402365 to 401129."""
-        results = find_routes(
+        outcome = find_routes(
             npz_path="data/graph.npz",
             origin_sensor="402365",
             dest_sensor="401129",
@@ -17,9 +17,9 @@ class TestRouteFinder:
             k=3,
         )
 
-        assert len(results) >= 1
+        assert len(outcome.routes) >= 1
 
-        best = results[0]
+        best = outcome.routes[0]
         assert best.path_sensor_ids[0] == "402365"
         assert best.path_sensor_ids[-1] == "401129"
         assert best.total_travel_time_seconds > 0
@@ -27,10 +27,12 @@ class TestRouteFinder:
         assert best.num_sensors >= 2
         assert best.algorithm == "AS"
         assert best.model == "mock"
+        assert outcome.origin["source"] == "sensor"
+        assert outcome.destination["source"] == "sensor"
 
     def test_find_routes_sorted(self):
         """Routes should be sorted by ascending travel time."""
-        results = find_routes(
+        outcome = find_routes(
             npz_path="data/graph.npz",
             origin_sensor="402365",
             dest_sensor="401129",
@@ -39,6 +41,7 @@ class TestRouteFinder:
             k=3,
         )
 
+        results = outcome.routes
         if len(results) > 1:
             times = [r.total_travel_time_seconds for r in results]
             assert times == sorted(times)
@@ -53,3 +56,23 @@ class TestRouteFinder:
                 dest_sensor="401129",
                 model_name="mock",
             )
+
+    def test_find_routes_custom_coordinates_snap(self):
+        """Custom lat/lon snaps to nearest sensors and finds a route."""
+        outcome = find_routes(
+            npz_path="data/graph.npz",
+            origin_sensor="",
+            dest_sensor="",
+            origin_lat=37.4,
+            origin_lon=-121.95,
+            dest_lat=37.35,
+            dest_lon=-121.9,
+            model_name="mock",
+            algorithm="AS",
+            k=2,
+        )
+        assert len(outcome.routes) >= 1
+        assert outcome.origin["source"] == "coordinates"
+        assert outcome.destination["source"] == "coordinates"
+        assert outcome.routes[0].path_sensor_ids[0] == outcome.origin["sensor_id"]
+        assert outcome.routes[0].path_sensor_ids[-1] == outcome.destination["sensor_id"]

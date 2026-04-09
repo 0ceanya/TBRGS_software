@@ -13,9 +13,9 @@ Data flow:
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 from src.core.graph_adapter import build_graph, get_all_edges, load_npz
 from src.prediction.interface import PredictionProvider
@@ -36,6 +36,76 @@ class RouteResult:
     num_sensors: int
     algorithm: str
     model: str
+
+
+@dataclass(frozen=True)
+class RouteSearchOutcome:
+    """Routes plus how origin/destination were resolved (sensor pick vs GPS snap)."""
+
+    routes: List[RouteResult]
+    origin: Dict[str, Any] = field(default_factory=dict)
+    destination: Dict[str, Any] = field(default_factory=dict)
+
+
+def snap_to_nearest_sensor(npz_data: dict, lat: float, lon: float) -> Tuple[str, float, float]:
+    """Return the sensor ID and position closest to the given WGS84 coordinates."""
+    sensor_ids = [str(s) for s in npz_data["sensor_ids"]]
+    lats = npz_data["lats"]
+    lons = npz_data["lons"]
+    best_sid: str = sensor_ids[0]
+    best_la = float(lats[0])
+    best_lo = float(lons[0])
+    best_km = float("inf")
+    for sid, la, lo in zip(sensor_ids, lats, lons):
+        d = haversine_km(float(lat), float(lon), float(la), float(lo))
+        if d < best_km:
+            best_km = d
+            best_sid = sid
+            best_la = float(la)
+            best_lo = float(lo)
+    return best_sid, best_la, best_lo
+
+
+def _resolve_route_endpoint(
+    npz_data: dict,
+    sensor_ids: List[str],
+    label: str,
+    sensor_arg: str,
+    lat: Optional[float],
+    lon: Optional[float],
+) -> Tuple[str, Dict[str, Any]]:
+    """Pick graph node from explicit coordinates (snap) or sensor ID."""
+    has_coords = lat is not None and lon is not None
+    has_sensor = bool(sensor_arg and sensor_arg.strip())
+
+    if has_coords:
+        if not (-90.0 <= lat <= 90.0 and -180.0 <= lon <= 180.0):
+            raise ValueError(f"{label}: latitude/longitude out of range")
+        snapped, la, lo = snap_to_nearest_sensor(npz_data, lat, lon)
+        detail: Dict[str, Any] = {
+            "source": "coordinates",
+            "sensor_id": snapped,
+            "requested_lat": float(lat),
+            "requested_lon": float(lon),
+            "snapped_lat": la,
+            "snapped_lon": lo,
+        }
+        return snapped, detail
+
+    if not has_sensor:
+        raise ValueError(
+            f"{label}: provide a sensor ID or both latitude and longitude"
+        )
+    sid = sensor_arg.strip()
+    if sid not in sensor_ids:
+        raise ValueError(f"{label} sensor '{sid}' not in graph")
+    idx = sensor_ids.index(sid)
+    return sid, {
+        "source": "sensor",
+        "sensor_id": sid,
+        "lat": float(npz_data["lats"][idx]),
+        "lon": float(npz_data["lons"][idx]),
+    }
 
 
 # Provider registry -- add new providers here when inference code is ready
@@ -101,33 +171,45 @@ def find_routes(
     npz_path: str | Path = "data/graph.npz",
     origin_sensor: str = "",
     dest_sensor: str = "",
+    origin_lat: Optional[float] = None,
+    origin_lon: Optional[float] = None,
+    dest_lat: Optional[float] = None,
+    dest_lon: Optional[float] = None,
     model_name: str = "mock",
     algorithm: str = "AS",
     k: int = 5,
     horizon_steps: int = 1,
-) -> List[RouteResult]:
+) -> RouteSearchOutcome:
     """Find top-k routes from origin to destination.
+
+    Each endpoint is defined either by ``origin_sensor`` / ``dest_sensor``
+    or by latitude and longitude (snapped to the nearest graph sensor).
 
     Args:
         npz_path: path to the sensor graph .npz file.
-        origin_sensor: starting sensor ID string.
-        dest_sensor: destination sensor ID string.
+        origin_sensor: starting sensor ID string (if not using coordinates).
+        dest_sensor: destination sensor ID string (if not using coordinates).
+        origin_lat, origin_lon: optional WGS84 start point (snapped to nearest sensor).
+        dest_lat, dest_lon: optional WGS84 end point (snapped to nearest sensor).
         model_name: prediction model ("mock", "gru", "dcrnn", "lstm").
         algorithm: search algorithm ("AS", "BFS", "DFS", "GBFS", "CUS1", "CUS2").
         k: number of routes to return (1-10).
         horizon_steps: prediction horizon in 5-minute steps.
 
     Returns:
-        List of RouteResult, sorted by ascending travel time.
+        RouteSearchOutcome with routes sorted by ascending travel time and
+        metadata describing how each endpoint was resolved.
     """
     # 1. Load graph
     npz_data = load_npz(npz_path)
     sensor_ids = [str(s) for s in npz_data["sensor_ids"]]
 
-    if origin_sensor not in sensor_ids:
-        raise ValueError(f"Origin sensor '{origin_sensor}' not in graph")
-    if dest_sensor not in sensor_ids:
-        raise ValueError(f"Destination sensor '{dest_sensor}' not in graph")
+    origin_resolved, origin_detail = _resolve_route_endpoint(
+        npz_data, sensor_ids, "Origin", origin_sensor, origin_lat, origin_lon
+    )
+    dest_resolved, dest_detail = _resolve_route_endpoint(
+        npz_data, sensor_ids, "Destination", dest_sensor, dest_lat, dest_lon
+    )
 
     # 2. Get predictions
     provider = _get_provider(model_name)
@@ -140,8 +222,8 @@ def find_routes(
     # 4. Build Part A Graph via adapter
     graph, id_to_sensor, sensor_to_id = build_graph(npz_data, edge_times)
 
-    origin_int = sensor_to_id[origin_sensor]
-    dest_int = sensor_to_id[dest_sensor]
+    origin_int = sensor_to_id[origin_resolved]
+    dest_int = sensor_to_id[dest_resolved]
 
     # 5. Find paths
     if k <= 1:
@@ -178,4 +260,8 @@ def find_routes(
         )
 
     results.sort(key=lambda r: r.total_travel_time_seconds)
-    return results
+    return RouteSearchOutcome(
+        routes=results,
+        origin=origin_detail,
+        destination=dest_detail,
+    )
