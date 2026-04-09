@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}TBRGS{% endblock %}</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="/static/css/style.css">
+    {% block head %}{% endblock %}
+</head>
+<body>
+    <nav class="nav">
+        <div class="nav-inner">
+            <a href="/" class="nav-brand">TBRGS</a>
+            <div class="nav-links">
+                <a href="/" class="nav-link {% block nav_routes %}{% endblock %}">Route Finding</a>
+                <a href="/models" class="nav-link {% block nav_models %}{% endblock %}">Model Comparison</a>
+                <a href="/testing" class="nav-link {% block nav_testing %}{% endblock %}">Testing</a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="main">
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="footer">
+        <p>COS30019 &mdash; Introduction to AI &mdash; Assignment 2B &mdash; Traffic-Based Route Guidance System</p>
+    </footer>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="/static/js/app.js"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

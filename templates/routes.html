@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block title %}Route Finding &mdash; TBRGS{% endblock %}
+{% block nav_routes %}active{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Route Finding</h1>
+    <p class="subtitle">Select origin and destination sensors to find optimal routes based on predicted traffic flow.</p>
+</div>
+
+<div class="layout-split">
+    <aside class="panel controls-panel">
+        <h2 class="panel-title">Parameters</h2>
+
+        <div class="field">
+            <label for="origin">Origin Sensor</label>
+            <select id="origin" class="input"></select>
+        </div>
+
+        <div class="field">
+            <label for="destination">Destination Sensor</label>
+            <select id="destination" class="input"></select>
+        </div>
+
+        <div class="field">
+            <label for="model">Prediction Model</label>
+            <select id="model" class="input">
+                <option value="mock" selected>Mock (default)</option>
+                <option value="gru">GRU</option>
+                <option value="dcrnn">DCRNN</option>
+                <option value="lstm">LSTM</option>
+            </select>
+        </div>
+
+        <div class="field">
+            <label for="algorithm">Search Algorithm</label>
+            <select id="algorithm" class="input"></select>
+        </div>
+
+        <div class="field">
+            <label for="k">Number of Routes</label>
+            <input type="range" id="k" min="1" max="10" value="5" class="slider">
+            <span id="k-display" class="slider-value">5</span>
+        </div>
+
+        <button id="find-btn" class="btn btn-primary">Find Routes</button>
+        <div id="status" class="status"></div>
+    </aside>
+
+    <section class="panel results-panel">
+        <div id="map" class="map-container"></div>
+        <div id="results-table-container" class="results-container">
+            <table id="results-table" class="table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Travel Time</th>
+                        <th>Distance</th>
+                        <th>Sensors</th>
+                    </tr>
+                </thead>
+                <tbody id="results-body"></tbody>
+            </table>
+        </div>
+    </section>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/routes.js"></script>
+{% endblock %}

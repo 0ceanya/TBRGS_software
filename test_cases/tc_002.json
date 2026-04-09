@@ -1,0 +1,67 @@
+{
+  "test_case_id": "tc_002",
+  "description": "Adjacent sensors - shortest possible route (1-hop)",
+  "category": "route_finding",
+  "input": {
+    "origin": "400030",
+    "destination": "400971",
+    "model": "mock",
+    "algorithm": "AS",
+    "k": 5
+  },
+  "expected_output": {
+    "num_routes": 5,
+    "routes": [
+      {
+        "path": [
+          "400030",
+          "400971"
+        ],
+        "travel_time_seconds": 100.6,
+        "distance_km": 1.16,
+        "num_sensors": 2
+      },
+      {
+        "path": [
+          "400030",
+          "404759",
+          "400971"
+        ],
+        "travel_time_seconds": 133.1,
+        "distance_km": 1.2,
+        "num_sensors": 3
+      },
+      {
+        "path": [
+          "400030",
+          "400122",
+          "400971"
+        ],
+        "travel_time_seconds": 134.9,
+        "distance_km": 1.2,
+        "num_sensors": 3
+      },
+      {
+        "path": [
+          "400030",
+          "400045",
+          "400971"
+        ],
+        "travel_time_seconds": 142.5,
+        "distance_km": 1.2,
+        "num_sensors": 3
+      },
+      {
+        "path": [
+          "400030",
+          "400479",
+          "404759",
+          "400971"
+        ],
+        "travel_time_seconds": 163.0,
+        "distance_km": 1.2,
+        "num_sensors": 4
+      }
+    ]
+  }
+}

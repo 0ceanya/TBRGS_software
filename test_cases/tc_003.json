@@ -1,0 +1,92 @@
+{
+  "test_case_id": "tc_003",
+  "description": "Medium distance route (~10km) using A*",
+  "category": "route_finding",
+  "input": {
+    "origin": "400343",
+    "destination": "400274",
+    "model": "mock",
+    "algorithm": "AS",
+    "k": 5
+  },
+  "expected_output": {
+    "num_routes": 5,
+    "routes": [
+      {
+        "path": [
+          "400343",
+          "401560",
+          "401440",
+          "400172",
+          "400895",
+          "402369",
+          "400687",
+          "400274"
+        ],
+        "travel_time_seconds": 1039.8,
+        "distance_km": 13.28,
+        "num_sensors": 8
+      },
+      {
+        "path": [
+          "400343",
+          "401560",
+          "401440",
+          "400172",
+          "400069",
+          "402369",
+          "400687",
+          "400274"
+        ],
+        "travel_time_seconds": 1040.1,
+        "distance_km": 13.28,
+        "num_sensors": 8
+      },
+      {
+        "path": [
+          "400343",
+          "401560",
+          "400030",
+          "400172",
+          "400895",
+          "402369",
+          "400687",
+          "400274"
+        ],
+        "travel_time_seconds": 1040.6,
+        "distance_km": 13.4,
+        "num_sensors": 8
+      },
+      {
+        "path": [
+          "400343",
+          "401560",
+          "400030",
+          "400172",
+          "400069",
+          "402369",
+          "400687",
+          "400274"
+        ],
+        "travel_time_seconds": 1040.9,
+        "distance_km": 13.4,
+        "num_sensors": 8
+      },
+      {
+        "path": [
+          "400343",
+          "401560",
+          "401440",
+          "400172",
+          "400794",
+          "402369",
+          "400687",
+          "400274"
+        ],
+        "travel_time_seconds": 1042.1,
+        "distance_km": 13.28,
+        "num_sensors": 8
+      }
+    ]
+  }
+}

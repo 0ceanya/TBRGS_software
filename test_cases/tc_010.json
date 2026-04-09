@@ -1,0 +1,143 @@
+{
+  "test_case_id": "tc_010",
+  "description": "Maximum route diversity (k=10)",
+  "category": "route_finding",
+  "input": {
+    "origin": "400715",
+    "destination": "402120",
+    "model": "mock",
+    "algorithm": "AS",
+    "k": 10
+  },
+  "expected_output": {
+    "num_routes": 10,
+    "routes": [
+      {
+        "path": [
+          "400715",
+          "404370",
+          "400723",
+          "400030",
+          "402120"
+        ],
+        "travel_time_seconds": 1236.6,
+        "distance_km": 17.22,
+        "num_sensors": 5
+      },
+      {
+        "path": [
+          "400715",
+          "404370",
+          "400723",
+          "401440",
+          "402120"
+        ],
+        "travel_time_seconds": 1242.1,
+        "distance_km": 17.15,
+        "num_sensors": 5
+      },
+      {
+        "path": [
+          "400715",
+          "404370",
+          "400723",
+          "404759",
+          "402120"
+        ],
+        "travel_time_seconds": 1248.7,
+        "distance_km": 17.38,
+        "num_sensors": 5
+      },
+      {
+        "path": [
+          "400715",
+          "404370",
+          "400723",
+          "400030",
+          "402284",
+          "402120"
+        ],
+        "travel_time_seconds": 1266.6,
+        "distance_km": 17.23,
+        "num_sensors": 6
+      },
+      {
+        "path": [
+          "400715",
+          "404370",
+          "400723",
+          "400971",
+          "402120"
+        ],
+        "travel_time_seconds": 1268.8,
+        "distance_km": 17.31,
+        "num_sensors": 5
+      },
+      {
+        "path": [
+          "400715",
+          "404370",
+          "400723",
+          "401440",
+          "402284",
+          "402120"
+        ],
+        "travel_time_seconds": 1270.7,
+        "distance_km": 17.16,
+        "num_sensors": 6
+      },
+      {
+        "path": [
+          "400715",
+          "404370",
+          "400723",
+          "404759",
+          "402284",
+          "402120"
+        ],
+        "travel_time_seconds": 1277.5,
+        "distance_km": 17.38,
+        "num_sensors": 6
+      },
+      {
+        "path": [
+          "400715",
+          "404370",
+          "400723",
+          "400030",
+          "402282",
+          "402120"
+        ],
+        "travel_time_seconds": 1279.2,
+        "distance_km": 17.25,
+        "num_sensors": 6
+      },
+      {
+        "path": [
+          "400715",
+          "404370",
+          "400723",
+          "401440",
+          "402282",
+          "402120"
+        ],
+        "travel_time_seconds": 1282.4,
+        "distance_km": 17.19,
+        "num_sensors": 6
+      },
+      {
+        "path": [
+          "400715",
+          "404370",
+          "400723",
+          "404759",
+          "402282",
+          "402120"
+        ],
+        "travel_time_seconds": 1288.7,
+        "distance_km": 17.38,
+        "num_sensors": 6
+      }
+    ]
+  }
+}

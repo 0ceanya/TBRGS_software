@@ -1,0 +1,87 @@
+{
+  "test_case_id": "tc_004",
+  "description": "Long distance route (~26km) spanning full network",
+  "category": "route_finding",
+  "input": {
+    "origin": "400750",
+    "destination": "401507",
+    "model": "mock",
+    "algorithm": "AS",
+    "k": 5
+  },
+  "expected_output": {
+    "num_routes": 5,
+    "routes": [
+      {
+        "path": [
+          "400750",
+          "400688",
+          "400952",
+          "401210",
+          "407344",
+          "407335",
+          "401507"
+        ],
+        "travel_time_seconds": 1827.6,
+        "distance_km": 26.07,
+        "num_sensors": 7
+      },
+      {
+        "path": [
+          "400750",
+          "400688",
+          "400952",
+          "400507",
+          "407321",
+          "407342",
+          "401507"
+        ],
+        "travel_time_seconds": 1847.2,
+        "distance_km": 26.1,
+        "num_sensors": 7
+      },
+      {
+        "path": [
+          "400750",
+          "400688",
+          "400952",
+          "401210",
+          "407344",
+          "407328",
+          "401507"
+        ],
+        "travel_time_seconds": 1872.2,
+        "distance_km": 26.07,
+        "num_sensors": 7
+      },
+      {
+        "path": [
+          "400750",
+          "400688",
+          "400952",
+          "400507",
+          "407331",
+          "407342",
+          "401507"
+        ],
+        "travel_time_seconds": 1881.1,
+        "distance_km": 26.12,
+        "num_sensors": 7
+      },
+      {
+        "path": [
+          "400750",
+          "400688",
+          "400952",
+          "400185",
+          "407341",
+          "407325",
+          "401507"
+        ],
+        "travel_time_seconds": 1914.2,
+        "distance_km": 26.07,
+        "num_sensors": 7
+      }
+    ]
+  }
+}

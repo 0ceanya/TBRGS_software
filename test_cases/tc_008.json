@@ -1,0 +1,76 @@
+{
+  "test_case_id": "tc_008",
+  "description": "Route finding using Greedy Best-First Search",
+  "category": "algorithm_comparison",
+  "input": {
+    "origin": "401224",
+    "destination": "400952",
+    "model": "mock",
+    "algorithm": "GBFS",
+    "k": 5
+  },
+  "expected_output": {
+    "num_routes": 5,
+    "routes": [
+      {
+        "path": [
+          "401224",
+          "404444",
+          "400688",
+          "400952"
+        ],
+        "travel_time_seconds": 742.9,
+        "distance_km": 10.57,
+        "num_sensors": 4
+      },
+      {
+        "path": [
+          "401224",
+          "400097",
+          "400213",
+          "400688",
+          "400952"
+        ],
+        "travel_time_seconds": 774.5,
+        "distance_km": 10.66,
+        "num_sensors": 5
+      },
+      {
+        "path": [
+          "401224",
+          "404444",
+          "400213",
+          "400688",
+          "400952"
+        ],
+        "travel_time_seconds": 774.5,
+        "distance_km": 10.6,
+        "num_sensors": 5
+      },
+      {
+        "path": [
+          "401224",
+          "400097",
+          "400213",
+          "404434",
+          "400952"
+        ],
+        "travel_time_seconds": 781.5,
+        "distance_km": 10.63,
+        "num_sensors": 5
+      },
+      {
+        "path": [
+          "401224",
+          "404444",
+          "400213",
+          "404434",
+          "400952"
+        ],
+        "travel_time_seconds": 781.6,
+        "distance_km": 10.57,
+        "num_sensors": 5
+      }
+    ]
+  }
+}

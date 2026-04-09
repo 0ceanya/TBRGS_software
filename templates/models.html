@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}Model Comparison &mdash; TBRGS{% endblock %}
+{% block nav_models %}active{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Model Comparison</h1>
+    <p class="subtitle">Compare route predictions across different ML models to evaluate their performance.</p>
+</div>
+
+<div class="layout-split">
+    <aside class="panel controls-panel">
+        <h2 class="panel-title">Parameters</h2>
+
+        <div class="field">
+            <label for="cmp-origin">Origin Sensor</label>
+            <select id="cmp-origin" class="input"></select>
+        </div>
+
+        <div class="field">
+            <label for="cmp-destination">Destination Sensor</label>
+            <select id="cmp-destination" class="input"></select>
+        </div>
+
+        <div class="field">
+            <label for="cmp-algorithm">Search Algorithm</label>
+            <select id="cmp-algorithm" class="input"></select>
+        </div>
+
+        <fieldset class="field">
+            <legend>Models to Compare</legend>
+            <div id="model-checkboxes" class="checkbox-group"></div>
+        </fieldset>
+
+        <button id="compare-btn" class="btn btn-primary">Compare</button>
+        <div id="cmp-status" class="status"></div>
+    </aside>
+
+    <section class="panel results-panel">
+        <div id="comparison-results" class="comparison-container">
+            <p class="placeholder-text">Select parameters and click Compare to see results.</p>
+        </div>
+    </section>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/models.js"></script>
+{% endblock %}

@@ -1,0 +1,31 @@
+
+
+{
+  "test_case_id": "tc_005",
+  "description": "Single optimal route (k=1)",
+  "category": "route_finding",
+  "input": {
+    "origin": "402365",
+    "destination": "401129",
+    "model": "mock",
+    "algorithm": "AS",
+    "k": 1
+  },
+  "expected_output": {
+    "num_routes": 1,
+    "routes": [
+      {
+        "path": [
+          "402365",
+          "402057",
+          "400664",
+          "404461",
+          "401129"
+        ],
+        "travel_time_seconds": 950.8,
+        "distance_km": 13.53,
+        "num_sensors": 5
+      }
+    ]
+  }
+}

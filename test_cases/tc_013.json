@@ -1,0 +1,28 @@
+{
+  "test_case_id": "tc_013",
+  "description": "Invalid input handling - nonexistent sensors and bad parameters",
+  "category": "error_handling",
+  "input": {
+    "tests": [
+      {
+        "origin": "INVALID",
+        "destination": "401129",
+        "expected": "error - invalid origin"
+      },
+      {
+        "origin": "402365",
+        "destination": "INVALID",
+        "expected": "error - invalid destination"
+      },
+      {
+        "origin": "402365",
+        "destination": "402365",
+        "expected": "empty routes - same O/D"
+      }
+    ]
+  },
+  "expected_output": {
+    "all_return_error_or_empty": true,
+    "no_crashes": true
+  }
+}
