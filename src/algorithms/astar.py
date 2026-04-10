@@ -1,7 +1,13 @@
 """A* Search using f(n) = g(n) + h(n).
 
 Ported from Part A (cos30019-Assignment2A) as a standalone copy.
-h(n) = straight-line distance to nearest destination (admissible).
+h(n) = minimum travel time estimate to nearest destination (admissible).
+
+Graph coordinates are (lat * 10000, lon * 10000).  Edge costs are travel
+time in seconds, so the heuristic must also return seconds.  We convert
+the coordinate distance to approximate km (equirectangular projection)
+then divide by the speed limit with no intersection delays to guarantee
+the estimate never exceeds the real cost.
 """
 
 import heapq
@@ -10,13 +16,33 @@ from typing import Dict, List, Tuple
 
 from src.core.graph import Graph
 
+# -- heuristic calibration constants --
+_COORD_SCALE: float = 10000.0
+_KM_PER_DEG_LAT: float = 111.0
+# cos(37°) ≈ 0.799; using 0.8 keeps a small safety margin
+_COS_LAT: float = 0.8
+# Speed limit from the fundamental diagram (travel_time.py)
+_MAX_SPEED_KMH: float = 60.0
+
+
+def _min_travel_time_seconds(
+    a: Tuple[int, int], b: Tuple[int, int]
+) -> float:
+    """Admissible lower-bound travel time between two scaled-coordinate points."""
+    dlat_deg = (a[0] - b[0]) / _COORD_SCALE
+    dlon_deg = (a[1] - b[1]) / _COORD_SCALE
+    dlat_km = dlat_deg * _KM_PER_DEG_LAT
+    dlon_km = dlon_deg * _KM_PER_DEG_LAT * _COS_LAT
+    dist_km = math.sqrt(dlat_km ** 2 + dlon_km ** 2)
+    return dist_km / _MAX_SPEED_KMH * 3600
+
 
 def _heuristic(
     node_coords: Tuple[int, int], dest_coords: List[Tuple[int, int]]
 ) -> float:
-    """Straight-line distance to the nearest destination."""
+    """Minimum travel time (seconds) to the nearest destination."""
     return min(
-        math.sqrt((d[0] - node_coords[0]) ** 2 + (d[1] - node_coords[1]) ** 2)
+        _min_travel_time_seconds(node_coords, d)
         for d in dest_coords
     )
 

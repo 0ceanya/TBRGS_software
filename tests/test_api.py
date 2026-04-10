@@ -53,6 +53,11 @@ class TestRoutesAPI:
         route = data["routes"][0]
         assert route["path"][0] == "402365"
         assert route["path"][-1] == "401129"
+        n = len(route["path"])
+        assert route["num_sensors"] == n
+        assert route["num_via_sensors"] == max(0, n - 2)
+        assert route["num_graph_hops"] == max(0, n - 1)
+        assert route["distance_basis"] == "graph_path_haversine_km"
         assert route["travel_time_seconds"] > 0
         assert data["endpoints"]["origin"]["source"] == "sensor"
         assert data["endpoints"]["destination"]["source"] == "sensor"

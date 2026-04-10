@@ -6,6 +6,8 @@ let map,
     polylineLayers = [];
 /** Incremented on each new search so in-flight path animations cancel */
 let routeAnimationGeneration = 0;
+/** Cache OSRM geometries by pin positions — reused when only model/algo changes */
+let osrmCache = { key: '', routes: [] };
 let originMarker, destMarker;
 /** 'sensor' = use dropdown; 'map' = use dragged pin position */
 let originMode = 'sensor';
@@ -332,41 +334,108 @@ function buildRouteFindBody() {
     return { body };
 }
 
-/**
- * Map lines: OSRM “best” driving path(s) between the A and B pins only.
- * Travel time / distance in the table still come from the sensor graph + model.
- */
-async function fetchPinToPinDrivingGeometries(numRoutes) {
-    const o = originMarker.getLatLng();
-    const d = destMarker.getLatLng();
-    const coords = `${o.lng},${o.lat};${d.lng},${d.lat}`;
-    const pinA = [o.lat, o.lng];
-    const pinB = [d.lat, d.lng];
-    const straight = [pinA, pinB];
-
-    let url = `/api/osrm?coords=${encodeURIComponent(coords)}`;
-    if (numRoutes > 1) {
-        url += '&alternatives=true';
+/** Polyline through each sensor in the graph route (distinct per top-k path). */
+function latLngsFromSensorPath(pathSensorIds) {
+    if (!pathSensorIds?.length) return [];
+    const out = [];
+    for (const id of pathSensorIds) {
+        const s = sensorData.find((x) => x.id === String(id));
+        if (s) out.push([s.lat, s.lon]);
     }
+    return out;
+}
 
+/** Drop consecutive waypoints closer than ~5 m (helps OSRM and shortens URLs). */
+function dedupeWaypointLatLngs(latlngs) {
+    if (latlngs.length < 2) return latlngs;
+    const out = [latlngs[0]];
+    for (let i = 1; i < latlngs.length; i++) {
+        const a = L.latLng(out[out.length - 1]);
+        const b = L.latLng(latlngs[i]);
+        if (a.distanceTo(b) > 5) {
+            out.push(latlngs[i]);
+        }
+    }
+    if (out.length < 2) {
+        return [latlngs[0], latlngs[latlngs.length - 1]];
+    }
+    return out;
+}
+
+/**
+ * One OSRM driving leg between two points (lon,lat order in API).
+ * Falls back to the straight segment if OSRM fails.
+ */
+async function fetchOsrmRoadForWaypoints(latlngs) {
+    if (!latlngs || latlngs.length < 2) {
+        return { latlngs: latlngs || [], distanceKm: null };
+    }
+    const coords = latlngs.map(([lat, lng]) => `${lng},${lat}`).join(';');
     try {
-        const res = await fetch(url);
+        const res = await fetch(`/api/osrm?coords=${encodeURIComponent(coords)}`);
         if (!res.ok) throw new Error('osrm http');
         const data = await res.json();
         if (data.code !== 'Ok' || !data.routes?.length) throw new Error('osrm response');
-
-        const geoms = data.routes.map((r) =>
-            r.geometry.coordinates.map(([lon, lat]) => [lat, lon]),
-        );
-        const out = [];
-        for (let i = 0; i < numRoutes; i++) {
-            const g = geoms[Math.min(i, geoms.length - 1)];
-            out.push(g.length >= 2 ? g : straight);
-        }
-        return out;
+        const r = data.routes[0];
+        const geom = r.geometry?.coordinates;
+        if (!geom?.length) throw new Error('no geometry');
+        const out = geom.map(([lon, lat]) => [lat, lon]);
+        const distanceKm = typeof r.distance === 'number' ? r.distance / 1000 : null;
+        return {
+            latlngs: out.length >= 2 ? out : latlngs,
+            distanceKm,
+        };
     } catch {
-        return Array.from({ length: numRoutes }, () => straight);
+        return { latlngs, distanceKm: null };
     }
+}
+
+/** Concatenate polylines, dropping duplicate join vertices. */
+function mergeGeometries(polylineParts) {
+    const merged = [];
+    for (const pts of polylineParts) {
+        if (!pts || pts.length < 1) continue;
+        if (merged.length === 0) {
+            merged.push(...pts);
+            continue;
+        }
+        const last = merged[merged.length - 1];
+        const first = pts[0];
+        const dup =
+            Math.abs(last[0] - first[0]) < 1e-5 && Math.abs(last[1] - first[1]) < 1e-5;
+        merged.push(...(dup ? pts.slice(1) : pts));
+    }
+    return merged;
+}
+
+/**
+ * Just pin A → pin B.
+ *
+ * Sensor waypoints are NOT passed to OSRM — they exist for traffic-based
+ * travel-time analysis (shown in the results table), not for driving
+ * directions.  Forcing OSRM through sensor coordinates causes detours
+ * because sensors sit on specific highway lanes and the graph-optimal
+ * path may use a different corridor than the direct driving route.
+ */
+function buildPinAnchoredChainLatLngs(_route) {
+    const pinA = originMarker.getLatLng();
+    const pinB = destMarker.getLatLng();
+    return [
+        [pinA.lat, pinA.lng],
+        [pinB.lat, pinB.lng],
+    ];
+}
+
+/**
+ * Road geometry along the chain: single OSRM multi-waypoint request so the
+ * resulting polyline follows a natural driving route instead of zigzagging
+ * between individual sensor pairs.
+ */
+async function fetchOsrmSegmentChain(latlngs) {
+    if (!latlngs || latlngs.length < 2) {
+        return { latlngs: latlngs || [], distanceKm: null };
+    }
+    return fetchOsrmRoadForWaypoints(latlngs);
 }
 
 function easeOutCubic(t) {
@@ -501,14 +570,15 @@ function renderForecastSection(data) {
         const table = document.createElement('table');
         table.className = 'table';
         table.innerHTML =
-            '<thead><tr><th>#</th><th>Travel time</th><th>Distance</th><th>Sensors</th></tr></thead><tbody></tbody>';
+            '<thead><tr><th>#</th><th>Travel time</th><th title="Great-circle along sensors">Graph km</th><th title="Between start and end on graph">Via</th><th title="Including start and end">Total</th></tr></thead><tbody></tbody>';
         const tb = table.querySelector('tbody');
         (m.routes || []).forEach((route, i) => {
             const tr = document.createElement('tr');
             tr.innerHTML = `
                 <td>${i + 1}</td>
                 <td>${route.travel_time_display}</td>
-                <td>${route.distance_km} km</td>
+                <td>${route.distance_km}</td>
+                <td>${route.num_via_sensors}</td>
                 <td>${route.num_sensors}</td>
             `;
             tb.appendChild(tr);
@@ -569,13 +639,67 @@ async function findRoutes() {
     btn.disabled = false;
 }
 
+function formatPinRoadKm(km) {
+    if (km == null || Number.isNaN(km)) return '—';
+    return `${km.toFixed(1)}`;
+}
+
+/**
+ * Produce exactly `count` visually distinct OSRM driving geometries.
+ *
+ * 1.  Ask OSRM for A→B with alternatives=true  (gives 1-2 routes).
+ * 2.  If we still need more, offset a via-waypoint perpendicular to the
+ *     A→B line (one side, then the other) so OSRM picks a different
+ *     corridor entirely.
+ */
+async function fetchDistinctOsrmRoutes(count) {
+    const pinA = originMarker.getLatLng();
+    const pinB = destMarker.getLatLng();
+    const a = [pinA.lat, pinA.lng];
+    const b = [pinB.lat, pinB.lng];
+
+    // Return cached result when pins haven't moved (model/algo change only)
+    const cacheKey = `${a[0].toFixed(5)},${a[1].toFixed(5)};${b[0].toFixed(5)},${b[1].toFixed(5)};${count}`;
+    if (osrmCache.key === cacheKey && osrmCache.routes.length > 0) {
+        return osrmCache.routes;
+    }
+
+    // Single request — the server proxy tries OSRM then Valhalla,
+    // both support alternatives natively.
+    let results = [];
+    try {
+        const coords = `${a[1]},${a[0]};${b[1]},${b[0]}`;
+        const wantAlts = count > 1;
+        const res = await fetch(`/api/osrm?coords=${encodeURIComponent(coords)}${wantAlts ? '&alternatives=true' : ''}`);
+        if (res.ok) {
+            const data = await res.json();
+            if (data.code === 'Ok' && data.routes?.length) {
+                results = data.routes.slice(0, count).map((r) => ({
+                    latlngs: (r.geometry?.coordinates || []).map(([lon, lat]) => [lat, lon]),
+                    distanceKm: typeof r.distance === 'number' ? r.distance / 1000 : null,
+                }));
+            }
+        }
+    } catch { /* fall through */ }
+
+    if (results.length === 0) {
+        results.push({ latlngs: [a, b], distanceKm: null });
+    }
+
+    osrmCache = { key: cacheKey, routes: results };
+    return results;
+}
+
 async function renderRoutes(routes, animGen, statusEl) {
     const tbody = document.getElementById('results-body');
     tbody.innerHTML = '';
 
-    const roadGeometries = await fetchPinToPinDrivingGeometries(routes.length);
+    const osrmRoutes = await fetchDistinctOsrmRoutes(routes.length);
 
     if (animGen !== routeAnimationGeneration) return;
+
+    const roadGeometries = osrmRoutes.map((r) => r.latlngs);
+    const pinRoadDistancesKm = osrmRoutes.map((r) => r.distanceKm);
 
     let bounds = L.latLngBounds([]);
     roadGeometries.forEach((latlngs) => {
@@ -592,7 +716,9 @@ async function renderRoutes(routes, animGen, statusEl) {
         tr.innerHTML = `
             <td><span style="color:${ROUTE_COLORS[i % ROUTE_COLORS.length]}; font-weight:700">${i + 1}</span></td>
             <td>${route.travel_time_display}</td>
-            <td>${route.distance_km} km</td>
+            <td>${route.distance_km}</td>
+            <td>${formatPinRoadKm(pinRoadDistancesKm[i])}</td>
+            <td>${route.num_via_sensors}</td>
             <td>${route.num_sensors}</td>
         `;
         tr.addEventListener('click', () => highlightRoute(i));

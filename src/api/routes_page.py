@@ -130,12 +130,17 @@ async def find(
 
 
 def _serialize_route(r: RouteResult) -> dict:
+    path = list(r.path_sensor_ids)
+    n = len(path)
     return {
-        "path": r.path_sensor_ids,
+        "path": path,
         "travel_time_seconds": round(r.total_travel_time_seconds, 1),
         "travel_time_display": _format_time(r.total_travel_time_seconds),
         "distance_km": round(r.total_distance_km, 2),
-        "num_sensors": r.num_sensors,
+        "distance_basis": "graph_path_haversine_km",
+        "num_sensors": n,
+        "num_via_sensors": max(0, n - 2),
+        "num_graph_hops": max(0, n - 1),
         "algorithm": r.algorithm,
         "model": r.model,
     }
