@@ -24,9 +24,60 @@ from src.routing.edge_weights import compute_edge_travel_times, get_provider
 from src.routing.endpoint_resolver import resolve_endpoint
 
 
+def _collapse_consecutive_duplicates(path_sids: List[str]) -> List[str]:
+    """Drop back-to-back repeats so path length matches traversed graph edges."""
+    out: List[str] = []
+    for sid in path_sids:
+        if not out or out[-1] != sid:
+            out.append(sid)
+    return out
+
+
+def _edge_set(path: List[str]) -> frozenset:
+    """Set of directed (from, to) edges in a sensor-ID path."""
+    return frozenset((path[i], path[i + 1]) for i in range(len(path) - 1))
+
+
+def _filter_diverse_routes(
+    results: List["RouteResult"],
+    max_overlap: float = 0.75,
+) -> List["RouteResult"]:
+    """Keep only routes whose edges overlap ≤ *max_overlap* with every kept route.
+
+    Overlap is measured as |shared edges| / |edges in shorter path|, so a
+    route that reuses 80 % of a previously accepted route's edges is dropped
+    even if the new route has extra segments.
+    """
+    if len(results) <= 1:
+        return results
+
+    kept: List["RouteResult"] = [results[0]]
+    for candidate in results[1:]:
+        cand_edges = _edge_set(candidate.path_sensor_ids)
+        if not cand_edges:
+            continue
+        too_similar = False
+        for accepted in kept:
+            acc_edges = _edge_set(accepted.path_sensor_ids)
+            if not acc_edges:
+                continue
+            shared = len(cand_edges & acc_edges)
+            denom = min(len(cand_edges), len(acc_edges))
+            if denom > 0 and shared / denom > max_overlap:
+                too_similar = True
+                break
+        if not too_similar:
+            kept.append(candidate)
+    return kept
+
+
 @dataclass(frozen=True)
 class RouteResult:
-    """A single route from origin to destination."""
+    """A single route from origin to destination.
+
+    ``num_sensors`` is len(path_sensor_ids) after collapsing consecutive
+    duplicate IDs; it includes origin and destination graph stations.
+    """
 
     path_sensor_ids: List[str]
     total_travel_time_seconds: float
@@ -76,14 +127,16 @@ def _routes_for_sensor_flows(
         path, _ = run_algorithm(algorithm, graph, origin_int, [dest_int])
         raw_paths: List[Tuple[List[int], float]] = [(path, 0.0)] if path else []
     else:
-        raw_paths = yen_k_shortest_paths(graph, origin_int, dest_int, k=k)
+        # Request extra candidates so the diversity filter can still
+        # return k meaningfully different routes.
+        raw_paths = yen_k_shortest_paths(graph, origin_int, dest_int, k=k * 3)
 
     results: List[RouteResult] = []
     for int_path, _ in raw_paths:
         if not int_path:
             continue
 
-        path_sids = [id_to_sensor[n] for n in int_path]
+        path_sids = _collapse_consecutive_duplicates([id_to_sensor[n] for n in int_path])
 
         total_time = 0.0
         total_dist = 0.0
@@ -104,7 +157,10 @@ def _routes_for_sensor_flows(
         )
 
     results.sort(key=lambda r: r.total_travel_time_seconds)
-    return results
+    # Drop alternatives that visually overlap with already-accepted routes
+    if k > 1:
+        results = _filter_diverse_routes(results)
+    return results[:k]
 
 
 def find_routes(

@@ -5,7 +5,7 @@
 {% block content %}
 <div class="page-header">
     <h1>Route Finding</h1>
-    <p class="subtitle">Drag the green (A) and red (B) pins to set start and end (snapped to the nearest sensor when you run a search). The <strong>map</strong> shows driving routes between A and B. <strong>Travel times and distances</strong> in the table use the sensor graph and prediction model (they are not taken from the map line). Choose a PEMS <code>test_cases</code> JSON example or a demo scenario; use &ldquo;Sensor IDs (advanced)&rdquo; for manual IDs.</p>
+    <p class="subtitle">Drag the green (A) and red (B) pins for start and end (search snaps to the nearest graph sensors). The <strong>map</strong> draws each alternative as a chain of short OSRM legs (pin → sensors along that path → pin) so lines follow roads, stay tied to your pins, and stay visually distinct when the graph paths differ—even if some via sensors are close together.</p>
 </div>
 
 <div class="layout-split">
@@ -97,8 +97,10 @@
                     <tr>
                         <th>#</th>
                         <th>Travel Time</th>
-                        <th>Distance</th>
-                        <th>Sensors</th>
+                        <th title="Sum of great-circle km along the sensor chain for this route">Graph km</th>
+                        <th title="OSRM driving distance along roads through this route’s sensor chain (varies per alternative when paths differ)">Road km</th>
+                        <th title="Sensors strictly between start and end on the graph path">Via</th>
+                        <th title="All graph stations on the path, including start and end">Total</th>
                     </tr>
                 </thead>
                 <tbody id="results-body"></tbody>

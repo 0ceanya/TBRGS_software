@@ -45,7 +45,10 @@ class TestRouteFinderBasics:
         assert best.path_sensor_ids[-1] == "401129"
         assert best.total_travel_time_seconds > 0
         assert best.total_distance_km > 0
+        assert best.num_sensors == len(best.path_sensor_ids)
         assert best.num_sensors >= 2
+        for i in range(len(best.path_sensor_ids) - 1):
+            assert best.path_sensor_ids[i] != best.path_sensor_ids[i + 1]
         assert best.algorithm == "AS"
         assert best.model == "mock"
         assert outcome.origin["source"] == "sensor"
