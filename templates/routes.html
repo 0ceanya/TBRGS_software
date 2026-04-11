@@ -13,9 +13,7 @@
         <h2 class="panel-title">Parameters</h2>
 
         <div class="field field-advanced collapsible" id="sensor-advanced">
-            <button type="button" class="btn btn-ghost btn-collapse" id="sensor-advanced-toggle" aria-expanded="false">
-                Sensor IDs (advanced)
-            </button>
+             <button id="find-btn" class="btn btn-primary">Find Routes</button>
             <div class="collapsible-body" id="sensor-advanced-body" hidden>
                 <label for="origin">Origin sensor ID</label>
                 <input type="text" id="origin-search" class="input input-search" placeholder="Type to filter..." autocomplete="off" />
@@ -82,7 +80,11 @@
             <p class="field-hint">Best route plus up to two backup paths (Yen k-shortest), not duplicate &ldquo;optimal&rdquo; lines.</p>
         </div>
 
-        <button id="find-btn" class="btn btn-primary">Find Routes</button>
+        <button type="button" class="btn btn-ghost btn-collapse" id="sensor-advanced-toggle" aria-expanded="false">
+            Sensor IDs (advanced)
+        </button>
+
+       
         <div id="status" class="status"></div>
     </aside>
 
