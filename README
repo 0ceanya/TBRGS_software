@@ -8,25 +8,3 @@ UV (recommended)
 
 Classic venv + pip
   python3 -m venv .venv && source .venv/bin/activate && pip install -r requirements.txt && python main.py
-
----
-
-src/utils/map_osm.py — new interactive OSM map                                                                                                   
-                                                                                                                                                   
-  - Real OSM tiles via Folium/Leaflet.js — actual street map you can pan & zoom                                                                    
-  - Edges as a single GeoJSON layer (vectorised numpy extraction, no Python loop) — went from 19s → 0.55s                                          
-  - Sensors also as one GeoJSON layer instead of 325 individual CircleMarker objects                                                               
-  - Shortest path overlay in blue with start/end markers when you pass --path START END                                                            
-  - macOS notifications at every major step (load, edge render, done)                                                                              
-                                                                                                                                                   
-  # Run from repo root                                                                                                         
-  .venv/bin/python3 src/utils/map_osm.py                                         
-  .venv/bin/python3 src/utils/map_osm.py --path 402365 401129                        
-                                                                                                                                                   
-  scripts/build_road_graph.py                                                                                                      
-
-    .venv + requirements.txt                                                                                                                         
-                                                                                                                                                   
-  python3 -m venv .venv                                                                                                                            
-  .venv/bin/pip install -r requirements.txt                                                                                                      
-  source .venv/bin/activate   
